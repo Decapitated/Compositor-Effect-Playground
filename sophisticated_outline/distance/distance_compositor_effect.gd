@@ -1,19 +1,13 @@
 @tool
-class_name ExtractionCompositorEffect extends CompositorEffect
+class_name DistanceCompositorEffect extends CompositorEffect
 
-const ExtractionShaderPath: String = "res://sophisticated_outline/outline/extraction.comp.glsl"
+const DistanceShaderPath: String = "res://sophisticated_outline/distance/distance.comp.glsl"
 
-@export var stencil_effect: StencilCompositorEffect
-@export_range(1.0, 10.0, 1.0, "or_greater") var scale: float = 1.0
-@export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold: float = 0.2
-@export_range(0.0, 10.0, 0.001, "or_greater") var normal_threshold: float = 0.2
-@export_range(0.0, 10.0, 0.001, "or_greater") var depth_normal_threshold: float = 0.1
-@export_range(0.0, 10.0, 0.001, "or_greater") var depth_normal_threshold_scale: float = 0.1
+@export var extraction_effect: ExtractionCompositorEffect
 
 var rd: RenderingDevice
 var shader: RID
 var pipeline: RID
-var nearest_sampler: RID
 
 var texture: RID
 var texture_format := RDTextureFormat.new()
@@ -36,8 +30,6 @@ func _notification(what: int) -> void:
         if shader.is_valid():
             # Freeing our shader will also free any dependents such as the pipeline!
             RenderingServer.free_rid(shader)
-        if nearest_sampler.is_valid():
-            rd.free_rid(nearest_sampler)
         if pipeline.is_valid():
             rd.free_rid(pipeline)
         if texture.is_valid():
@@ -75,7 +67,7 @@ func _check_shader() -> bool:
     if not rd:
         return false
 
-    var new_shader_code: String = FileAccess.get_file_as_string(ExtractionShaderPath)
+    var new_shader_code: String = FileAccess.get_file_as_string(DistanceShaderPath)
 
     # We don't have a (new) shader?
     assert(!new_shader_code.is_empty(), "Shader code is empty")
@@ -142,40 +134,20 @@ func _render_callback(_p_effect_callback_type: EffectCallbackType, p_render_data
                     size.x,
                     size.y,
                     0.0,
-                    0.0,
-                    scale,
-                    depth_threshold,
-                    normal_threshold,
-                    depth_normal_threshold,
-                    depth_normal_threshold_scale,
-                    0.0, 0.0, 0.0 # Padding
+                    0.0 # Padding
                 ])
-
-            # Make sure we have a sampler.
-            if not nearest_sampler.is_valid():
-                var sampler_state: RDSamplerState = RDSamplerState.new()
-                sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
-                sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
-                nearest_sampler = rd.sampler_create(sampler_state)
 
             # Loop through views just in case we're doing stereo rendering. No extra cost if this is mono.
             var view_count: int = render_scene_buffers.get_view_count()
             for view in view_count:
                 # Get the RID for our scene data buffer.
                 var scene_data_buffers: RID = scene_data.get_uniform_buffer()
+                # Create a uniform set, this will be cached, the cache will be cleared if our viewports configuration is changed.
 
                 # Get the RID for our color image, we will be reading from and writing to it.
                 var color_image: RID = render_scene_buffers.get_color_layer(view)
+                var seed_image: RID = extraction_effect.output_texture.texture_rd_rid
 
-                # Get the RID for our depth image, we will be reading from it.
-                var depth_image: RID = render_scene_buffers.get_depth_layer(view)
-
-                # render_buffers
-                var normal_image: RID = render_scene_buffers.get_texture("forward_clustered", "normal_roughness")
-
-                var stencil_image: RID = stencil_effect.output_texture.texture_rd_rid
-
-                # Create a uniform set, this will be cached, the cache will be cleared if our viewports configuration is changed.
                 # Scene Data
                 var scene_data_uniform := RDUniform.new()
                 scene_data_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_UNIFORM_BUFFER
@@ -186,28 +158,17 @@ func _render_callback(_p_effect_callback_type: EffectCallbackType, p_render_data
                 color_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
                 color_uniform.binding = 1
                 color_uniform.add_id(color_image)
-                # Depth Image
-                var depth_uniform := RDUniform.new()
-                depth_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
-                depth_uniform.binding = 2
-                depth_uniform.add_id(nearest_sampler)
-                depth_uniform.add_id(depth_image)
-                # Normal Image
-                var normal_uniform := RDUniform.new()
-                normal_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-                normal_uniform.binding = 3
-                normal_uniform.add_id(normal_image)
-                # Stencil Image
-                var stencil_uniform := RDUniform.new()
-                stencil_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-                stencil_uniform.binding = 4
-                stencil_uniform.add_id(stencil_image)
+                # Seed Image
+                var seed_uniform := RDUniform.new()
+                seed_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+                seed_uniform.binding = 2
+                seed_uniform.add_id(seed_image)
                 # Output Image
                 var output_uniform := RDUniform.new()
                 output_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-                output_uniform.binding = 5
+                output_uniform.binding = 3
                 output_uniform.add_id(texture)
-                var uniform_set_rid: RID = UniformSetCacheRD.get_cache(shader, 0, [scene_data_uniform, color_uniform, depth_uniform, normal_uniform, stencil_uniform, output_uniform])
+                var uniform_set_rid: RID = UniformSetCacheRD.get_cache(shader, 0, [scene_data_uniform, color_uniform, seed_uniform, output_uniform])
 
                 # Set our view.
                 push_constant[2] = view

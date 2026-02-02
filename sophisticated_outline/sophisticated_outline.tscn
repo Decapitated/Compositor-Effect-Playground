@@ -2,7 +2,8 @@
 
 [ext_resource type="Environment" uid="uid://bfjush7w8wub" path="res://world_environment.tres" id="1_wcg42"]
 [ext_resource type="Script" uid="uid://dx4ulbmurbl0r" path="res://sophisticated_outline/stencil/stencil_compositor_effect.gd" id="2_lmsaj"]
-[ext_resource type="Script" uid="uid://bxvibir5fmujw" path="res://sophisticated_outline/outline/extraction_compositor_effect.gd" id="3_lmsaj"]
+[ext_resource type="Script" uid="uid://bxvibir5fmujw" path="res://sophisticated_outline/extraction/extraction_compositor_effect.gd" id="3_lmsaj"]
+[ext_resource type="Script" uid="uid://b1tbe4cvsucar" path="res://sophisticated_outline/distance/distance_compositor_effect.gd" id="4_hmujs"]
 [ext_resource type="Shader" uid="uid://bx2im4keidef8" path="res://sophisticated_outline/write_buffer.gdshader" id="4_lnw27"]
 [ext_resource type="Shader" uid="uid://b6ddxyv68vt61" path="res://grid.gdshader" id="4_u4qk3"]
 [ext_resource type="Material" uid="uid://b4vvpd8uryexx" path="res://sophisticated_outline/assets/godot_plush_model/godot_plush_mat.tres" id="6_lmsaj"]
@@ -29,8 +30,19 @@ script = ExtResource("3_lmsaj")
 stencil_effect = SubResource("CompositorEffect_besbs")
 metadata/_custom_type_script = "uid://bxvibir5fmujw"
 
+[sub_resource type="CompositorEffect" id="CompositorEffect_hpned"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("4_hmujs")
+extraction_effect = SubResource("CompositorEffect_hmujs")
+metadata/_custom_type_script = "uid://b1tbe4cvsucar"
+
 [sub_resource type="Compositor" id="Compositor_hmujs"]
-compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_besbs"), SubResource("CompositorEffect_hmujs")])
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_besbs"), SubResource("CompositorEffect_hmujs"), SubResource("CompositorEffect_hpned")])
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_nsmdq"]
 render_priority = 0
