@@ -1,0 +1,20 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://b4vvpd8uryexx"]
+
+[ext_resource type="Shader" uid="uid://dhkgcxxo8ja7b" path="res://sophisticated_outline/assets/godot_plush_model/godot_plush.gdshader" id="1_jpm0u"]
+[ext_resource type="Texture2D" uid="uid://chptmk32p2njn" path="res://sophisticated_outline/assets/godot_plush_model/godot_plush_albedo.png" id="2_532ik"]
+[ext_resource type="Texture2D" uid="uid://7vv4l7df76ea" path="res://sophisticated_outline/assets/godot_plush_model/godot_plush_normal.png" id="3_3n74y"]
+
+[sub_resource type="Gradient" id="Gradient_evuwy"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.5)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_7b7yy"]
+gradient = SubResource("Gradient_evuwy")
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_jpm0u")
+shader_parameter/albedo_texture = ExtResource("2_532ik")
+shader_parameter/normal_texture = ExtResource("3_3n74y")
+shader_parameter/uv_offset = Vector2(0, 0)
+shader_parameter/color_ramp = SubResource("GradientTexture1D_7b7yy")
