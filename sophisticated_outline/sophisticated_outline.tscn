@@ -1540,12 +1540,12 @@ material_override = SubResource("ShaderMaterial_nsmdq")
 mesh = SubResource("PlaneMesh_m5ry3")
 
 [node name="Cube" type="MeshInstance3D" parent="." unique_id=1677507575]
-transform = Transform3D(0.78260815, 0.2230893, -0.5811675, 0, -0.93358046, -0.35836792, -0.62251467, 0.28046167, -0.73062766, 0, -0.1, 0)
+transform = Transform3D(-0.20791152, 0.9781476, 2.7508468e-08, 2.7508472e-08, 3.3970124e-08, -1, -0.9781476, -0.20791152, -3.3970128e-08, 0, -0.1, 0)
 material_override = SubResource("ShaderMaterial_jhuk7")
 mesh = SubResource("BoxMesh_jhuk7")
 
 [node name="Cube2" type="MeshInstance3D" parent="." unique_id=96007176]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.09000002, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.98, 0.07, 1.755)
 material_override = SubResource("StandardMaterial3D_lmsaj")
 mesh = SubResource("BoxMesh_jhuk7")
 
@@ -1560,7 +1560,7 @@ material_override = SubResource("ShaderMaterial_jhuk7")
 mesh = SubResource("CylinderMesh_xvnfi")
 
 [node name="godot_plush_model" type="Node3D" parent="." unique_id=2005229247]
-transform = Transform3D(0.5821231, 0, 0.8131006, 0, 1, 0, -0.8131006, 0, 0.5821231, -0.6593995, 0, 1.2205957)
+transform = Transform3D(0.85806483, 0, 0.5135412, 0, 1, 0, -0.5135412, 0, 0.85806483, -0.6593995, 0, 1.2205957)
 
 [node name="Rig" type="Node3D" parent="godot_plush_model" unique_id=1958076011]
 

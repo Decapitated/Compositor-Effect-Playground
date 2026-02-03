@@ -51,10 +51,13 @@ float get_depth(vec2 uv) {
 }
 
 float sample_depth(vec2 uv, vec2 texel_size) {
-    vec2 bottomLeftUV = uv - vec2(texel_size.x, texel_size.y) * params.scale;
-    vec2 topRightUV = uv + vec2(texel_size.x, texel_size.y) * params.scale;  
-    vec2 bottomRightUV = uv + vec2(texel_size.x * params.scale, -texel_size.y * params.scale);
-    vec2 topLeftUV = uv + vec2(-texel_size.x * params.scale, texel_size.y * params.scale);
+    float halfScaleFloor = floor(params.scale * 0.5);
+    float halfScaleCeil = ceil(params.scale * 0.5);
+
+    vec2 bottomLeftUV = uv - vec2(texel_size.x, texel_size.y) * halfScaleFloor;
+    vec2 topRightUV = uv + vec2(texel_size.x, texel_size.y) * halfScaleCeil;  
+    vec2 bottomRightUV = uv + vec2(texel_size.x * halfScaleCeil, -texel_size.y * halfScaleFloor);
+    vec2 topLeftUV = uv + vec2(-texel_size.x * halfScaleFloor, texel_size.y * halfScaleCeil);
 
     float depth0 = get_depth(bottomLeftUV);
     float depth1 = get_depth(topRightUV);
@@ -82,10 +85,13 @@ vec4 get_normal(ivec2 uv) {
 }
 
 float sample_normal(ivec2 uv) {
-    ivec2 bottomLeftUV = uv - ivec2(params.scale);
-    ivec2 topRightUV = uv + ivec2(params.scale);  
-    ivec2 bottomRightUV = uv + ivec2(params.scale, -params.scale);
-    ivec2 topLeftUV = uv + ivec2(-params.scale, params.scale);
+    float halfScaleFloor = floor(params.scale * 0.5);
+    float halfScaleCeil = ceil(params.scale * 0.5);
+
+    ivec2 bottomLeftUV = ivec2(uv - vec2(halfScaleFloor));
+    ivec2 topRightUV = ivec2(uv + vec2(halfScaleCeil));  
+    ivec2 bottomRightUV = ivec2(uv + vec2(halfScaleCeil, -halfScaleFloor));
+    ivec2 topLeftUV = ivec2(uv + vec2(-halfScaleFloor, halfScaleCeil));
 
     vec3 normal0 = get_normal(bottomLeftUV).rgb;
     vec3 normal1 = get_normal(topRightUV).rgb;
@@ -104,11 +110,14 @@ float get_stencil(ivec2 uv) {
     return imageLoad(stencil_image, uv).r;
 }
 
-float sample_stencil(ivec2 uv) {
-    ivec2 bottomLeftUV = uv - ivec2(params.scale);
-    ivec2 topRightUV = uv + ivec2(params.scale);  
-    ivec2 bottomRightUV = uv + ivec2(params.scale, -params.scale);
-    ivec2 topLeftUV = uv + ivec2(-params.scale, params.scale);
+float sample_stencil(ivec2 uv, vec2 texel_size) {
+    float halfScaleFloor = floor(params.scale * 0.5);
+    float halfScaleCeil = ceil(params.scale * 0.5);
+
+    ivec2 bottomLeftUV = ivec2(uv - vec2(halfScaleFloor));
+    ivec2 topRightUV = ivec2(uv + vec2(halfScaleCeil));  
+    ivec2 bottomRightUV = ivec2(uv + vec2(halfScaleCeil, -halfScaleFloor));
+    ivec2 topLeftUV = ivec2(uv + vec2(-halfScaleFloor, halfScaleCeil));
 
     float stencil0 = get_stencil(bottomLeftUV);
     float stencil1 = get_stencil(topRightUV);
@@ -148,7 +157,7 @@ void main() {
     float normal_threshold = params.normal_threshold;
     normal_sample = stencil == 0.0 && normal_sample > normal_threshold ? 1.0 : 0.0;
 
-    float stencil_sample = sample_stencil(uv);
+    float stencil_sample = sample_stencil(uv, scene_data_block.data.screen_pixel_size);
 
     float edge = max(max(depth_sample, normal_sample), stencil_sample);
     

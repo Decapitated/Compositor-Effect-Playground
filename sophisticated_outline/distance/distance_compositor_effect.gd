@@ -85,8 +85,9 @@ func _check_shader() -> bool:
     shader_source.source_compute = new_shader_code
     var shader_spirv: RDShaderSPIRV = rd.shader_compile_spirv_from_source(shader_source)
 
-    if shader_spirv.compile_error_compute != "" and _last_shader_code != new_shader_code:
-        push_error(shader_spirv.compile_error_compute)
+    if shader_spirv.compile_error_compute != "":
+        if _last_shader_code != new_shader_code:
+            push_error(shader_spirv.compile_error_compute)
         # push_error("In: " + new_shader_code)
         return false
 

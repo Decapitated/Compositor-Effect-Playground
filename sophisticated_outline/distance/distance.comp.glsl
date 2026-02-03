@@ -28,6 +28,23 @@ layout(push_constant, std430) uniform Params {
 }
 params;
 
+float get_seed(ivec2 uv) {
+    return imageLoad(seed_image, uv).r;
+}
+
+float get_seed_distance(ivec2 uv, ivec2 size) {
+    float min_distance = 10000000.0;
+    for(int y = 0; y < size.y; y++) {
+        for(int x = 0; x < size.x; x++) {
+            ivec2 seed_uv = ivec2(x, y);
+            float seed = get_seed(seed_uv);
+            float seed_distance = distance(uv, seed_uv);
+            min_distance = min(min_distance, seed_distance);
+        }
+    }
+    return min_distance;
+}
+
 // The code we want to execute in each invocation.
 void main() {
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
@@ -40,8 +57,9 @@ void main() {
 
     vec2 uv_norm = vec2(uv) / params.raster_size;
 
-    vec4 seed = imageLoad(seed_image, uv);
+    float seed = get_seed(uv);
+    // float seed_distance = seed == 1.0 ? 0.0 : get_seed_distance(uv, size);
 
-    imageStore(color_image, uv, seed);
+    imageStore(color_image, uv, vec4(vec3(seed), 1.0));
     // imageStore(color_image, uv, color);
 }
