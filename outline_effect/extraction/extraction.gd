@@ -3,10 +3,9 @@ class_name ExtractionEffect extends CompositorEffect
 
 @export var stencil_effect: StencilCompositorEffect
 @export_range(1, 10, 1, "or_greater") var scale := 1
-@export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold := 2.0
+@export_range(0.0, 10.0, 0.001, "or_greater") var near_depth_threshold := 2.0
+@export_range(0.0, 10.0, 0.001, "or_greater") var far_depth_threshold := 2.0
 @export_range(0.0, 10.0, 0.001, "or_greater") var normal_threshold := 0.5
-@export_range(0.0, 1.0, 0.001) var depth_normal_threshold := 0.2
-@export_range(1.0, 10.0, 0.001, "or_greater") var depth_normal_threshold_scale := 1.0
 @export var debug := false
 
 var rd: RenderingDevice = null
@@ -92,15 +91,13 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var z_groups: int = 1
 
     var push_constant := PackedFloat32Array([
-        size.x, size.y,               # Raster Size                  (8) (8)
-        0.0,                          # View                         (4) (12)
-        float(debug),                 # Debug                        (4) (16)
-        float(scale),                 # Scale                        (4) (4)
-        depth_threshold,              # Depth Theshold               (4) (8)
-        normal_threshold,             # Normal Threshold             (4) (12)
-        depth_normal_threshold,       # Depth Normal Threshold       (4) (16)
-        depth_normal_threshold_scale, # Depth Normal Threshold Scale (4) (20)
-        0.0, 0.0, 0.0                 # Padding                      (4) (24)
+        size.x, size.y,       # Raster Size         (8) (8)
+        0.0,                  # View                (4) (12)
+        float(debug),         # Debug               (4) (16)
+        float(scale),         # Scale               (4) (4)
+        near_depth_threshold, # Near Depth Theshold (4) (8)
+        far_depth_threshold,  # Far Depth Theshold  (4) (12)
+        normal_threshold,     # Normal Threshold    (4) (16)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    

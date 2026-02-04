@@ -29,10 +29,9 @@ layout(push_constant, std430) uniform Params {
     float view;
     float debug;
     float scale;
-    float depth_threshold;
+    float near_depth_threshold;
+    float far_depth_threshold;
     float normal_threshold;
-    float depth_normal_threshold;
-    float depth_normal_threshold_scale;
 }
 params;
 
@@ -152,21 +151,13 @@ void main() {
     vec4 normal = get_normal(uv_norm);
     float stencil = get_stencil(uv_norm);
 
-    vec2 ndc = uv_norm * 2.0 - 1.0;
-    ndc.y = -ndc.y;
-
     float normal_sample = sample_normal(uv_norm, scene_data_block.data.screen_pixel_size);
     float normal_edge = stencil == 0.0 && normal_sample > params.normal_threshold ? 1.0 : 0.0;
 
-    vec4 view_pos = scene_data_block.data.inv_projection_matrix * vec4(ndc, -1.0, 1.0);
-    vec3 view_dir = normalize(view_pos.xyz);
-    float n_dot_v = 1.0 - dot(normal.xyz * 2.0 - 1.0, -view_dir);
-    float normal_threshold_1 = saturate((n_dot_v - params.depth_normal_threshold) / (1.0 - params.depth_normal_threshold));
-    float normal_threshold = normal_threshold_1 * params.depth_normal_threshold_scale + 1.0;
-
     float depth_sample = sample_depth(uv_norm, scene_data_block.data.screen_pixel_size);
-    float depth_threshold = params.depth_threshold;
-    float depth_edge = stencil == 0.0 && ((normal_sample > params.normal_threshold*0.5 && depth_sample * 100.0 > depth_threshold) || (depth_sample * 100.0 > depth_threshold * 4.0)) ? 1.0 : 0.0;
+    float near_depth_threshold = params.near_depth_threshold;
+    float far_depth_threshold = params.far_depth_threshold;
+    float depth_edge = stencil == 0.0 && ((normal_sample > params.normal_threshold * 0.5 && depth_sample * 100.0 > near_depth_threshold) || (depth_sample * 100.0 > far_depth_threshold)) ? 1.0 : 0.0;
 
     float stencil_sample = sample_stencil(uv_norm, scene_data_block.data.screen_pixel_size);
     float stencil_edge = stencil_sample > 0.0 ? 1.0 : 0.0;
