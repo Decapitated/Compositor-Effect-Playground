@@ -1,7 +1,7 @@
 @tool
 class_name ExtractionEffect extends CompositorEffect
 
-@export var stencil_effect: StencilCompositorEffect
+@export var stencil_effect: StencilEffect
 @export_range(1, 10, 1, "or_greater") var scale := 1
 @export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold := 0.05
 @export_range(0.0, 10.0, 0.001, "or_greater") var normal_threshold := 0.5
@@ -62,7 +62,6 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     elif error == CallbackError.INVALID_PIPELINE:
         error = CallbackError.OK
 
-
     var scene_buffers: RenderSceneBuffersRD = render_data.get_render_scene_buffers()
     var scene_data: RenderSceneData = render_data.get_render_scene_data()
     
@@ -77,10 +76,11 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
 
     # Get our render size, this is the 3D render resolution!
     var size: Vector2i = scene_buffers.get_internal_size()
-    if size.x == 0 and size.y == 0:
+    if size.x == 0 && size.y == 0:
         return
 
-    if !output_texture.texture_rd_rid.is_valid() || _texture_format.width != size.x || _texture_format.height != size.y:
+    if !output_texture.texture_rd_rid.is_valid() || \
+            _texture_format.width != size.x || _texture_format.height != size.y:
         _create_output_texture(size.x, size.y)
 
     @warning_ignore("integer_division")
@@ -102,9 +102,12 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     # Run compute for each view.    
     var view_count: int = scene_buffers.get_view_count()
     for view in view_count:
+        # Set view.
+        push_constant[2] = view
+
         #region Retrieve & Check Textures
         var color_image: RID = scene_buffers.get_color_layer(view)
-        if not color_image.is_valid():
+        if !color_image.is_valid():
             if error != CallbackError.INVALID_COLOR_TEXTURE:
                 error = CallbackError.INVALID_COLOR_TEXTURE
                 push_error("Color texture is invalid")
@@ -113,7 +116,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
             error = CallbackError.OK
 
         var depth_image: RID = scene_buffers.get_depth_layer(view)
-        if not depth_image.is_valid():
+        if !depth_image.is_valid():
             if error != CallbackError.INVALID_DEPTH_TEXTURE:
                 error = CallbackError.INVALID_DEPTH_TEXTURE
                 push_error("Depth texture is invalid")
@@ -122,7 +125,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
             error = CallbackError.OK
 
         var normal_image: RID = scene_buffers.get_texture("forward_clustered", "normal_roughness")
-        if not normal_image.is_valid():
+        if !normal_image.is_valid():
             if error != CallbackError.INVALID_NORMAL_TEXTURE:
                 error = CallbackError.INVALID_NORMAL_TEXTURE
                 push_error("Normal texture is invalid")
@@ -131,7 +134,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
             error = CallbackError.OK
         #endregion
 
-        #region Uniforms
+        #region Set 0 Uniforms
         # Scene Data
         var scene_data_uniform := RDUniform.new()
         scene_data_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_UNIFORM_BUFFER
@@ -167,15 +170,12 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         output_uniform.add_id(_texture)
         #endregion
 
-        var uniform_set: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, depth_uniform, normal_uniform, stencil_uniform, output_uniform])
-
-        # Set view.
-        push_constant[2] = view
+        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, depth_uniform, normal_uniform, stencil_uniform, output_uniform])
 
         # Run compute _shader.
         var compute_list: int = _rd.compute_list_begin()
         _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
-        _rd.compute_list_bind_uniform_set(compute_list, uniform_set, 0)
+        _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
         var push_constant_bytes := push_constant.to_byte_array()
         _rd.compute_list_set_push_constant(compute_list, push_constant_bytes, push_constant_bytes.size())
         _rd.compute_list_dispatch(compute_list, x_groups, y_groups, z_groups)

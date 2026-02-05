@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dpiycjyqn5ovj"]
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
-[ext_resource type="Script" uid="uid://dx4ulbmurbl0r" path="res://sophisticated_outline/stencil/stencil_compositor_effect.gd" id="3_g7vr4"]
+[ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://outline_effect/stencil/stencil.gd" id="2_s72gf"]
 [ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://outline_effect/extraction/extraction.gd" id="3_vxeov"]
 [ext_resource type="Shader" uid="uid://bjba61flufyu2" path="res://outline_effect/outline_effect.gdshader" id="4_g7vr4"]
 
@@ -17,18 +17,17 @@ func _ready() -> void:
 	tween.set_loops()
 "
 
-[sub_resource type="CompositorEffect" id="CompositorEffect_s72gf"]
+[sub_resource type="CompositorEffect" id="CompositorEffect_vsri0"]
 resource_local_to_scene = false
 resource_name = ""
 enabled = true
 effect_callback_type = 4
 needs_motion_vectors = false
 needs_normal_roughness = false
-script = ExtResource("3_g7vr4")
-shader_dirty = false
-metadata/_custom_type_script = "uid://dx4ulbmurbl0r"
+script = ExtResource("2_s72gf")
+metadata/_custom_type_script = "uid://jxepgw1atqhk"
 
-[sub_resource type="CompositorEffect" id="CompositorEffect_g7vr4"]
+[sub_resource type="CompositorEffect" id="CompositorEffect_awg7p"]
 resource_local_to_scene = false
 resource_name = ""
 enabled = true
@@ -36,13 +35,14 @@ effect_callback_type = 4
 needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("3_vxeov")
-stencil_effect = SubResource("CompositorEffect_s72gf")
+stencil_effect = SubResource("CompositorEffect_vsri0")
 depth_threshold = 0.1
-normal_threshold = 0.1
+normal_threshold = 0.15
+debug = true
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
 
-[sub_resource type="Compositor" id="Compositor_ygclc"]
-compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_s72gf"), SubResource("CompositorEffect_g7vr4")])
+[sub_resource type="Compositor" id="Compositor_awg7p"]
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri0"), SubResource("CompositorEffect_awg7p")])
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_s72gf"]
 shader = ExtResource("4_g7vr4")
@@ -66,7 +66,7 @@ func _ready() -> void:
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
 [node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]
-transform = Transform3D(0.898794, 0, 0.4383711, 0, 1, 0, -0.4383711, 0, 0.898794, 0, 0, 0)
+transform = Transform3D(0.7071067, 0, -0.7071067, 0, 1, 0, 0.7071067, 0, 0.7071067, 0, 0, 0)
 
 [node name="Cube2" parent="3D Samples" index="7" unique_id=1043859046]
 transform = Transform3D(0.61290485, -0.44979134, -0.6496423, 0.059156843, 0.8459821, -0.5299191, 0.78793925, 0.2863592, 0.54511464, -1.88, 1.545, 0.975)
@@ -77,15 +77,15 @@ script = SubResource("GDScript_kf30h")
 
 [node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=2045132986]
 transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.96592575, 0, 3, 0)
-compositor = SubResource("Compositor_ygclc")
+compositor = SubResource("Compositor_awg7p")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1991948559]
 
-[node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=1324590132]
+[node name="Outline" type="TextureRect" parent="CanvasLayer" unique_id=1324590132]
 material = SubResource("ShaderMaterial_s72gf")
 offset_right = 40.0
 offset_bottom = 40.0
 script = SubResource("GDScript_vxeov")
-extraction_effect = SubResource("CompositorEffect_g7vr4")
+extraction_effect = SubResource("CompositorEffect_awg7p")
 
 [editable path="3D Samples"]

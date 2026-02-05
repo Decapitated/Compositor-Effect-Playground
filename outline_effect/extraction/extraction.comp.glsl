@@ -149,17 +149,13 @@ void main() {
 
     vec4 color = imageLoad(color_image, uv);
     vec4 normal = get_normal(uv_norm);
-    float stencil = 1.0 - get_stencil(uv_norm);
+    float stencil = get_stencil(uv_norm);
     
-    float depth_sample = sample_depth(uv_norm, scene_data_block.data.screen_pixel_size) * stencil;
-    float normal_sample = sample_normal(uv_norm, scene_data_block.data.screen_pixel_size) * stencil;
+    float depth_sample = stencil == 0.0 ? 0.0 : sample_depth(uv_norm, scene_data_block.data.screen_pixel_size);
+    float normal_sample = stencil == 0.0 ? 0.0 : sample_normal(uv_norm, scene_data_block.data.screen_pixel_size);
     float stencil_sample = sample_stencil(uv_norm, scene_data_block.data.screen_pixel_size);
 
     float normal_mask = ceil(normal_sample - 0.001);
-
-    float normal_threshold = params.normal_threshold;
-    float normal_edge = normal_sample > normal_threshold ? 1.0 : 0.0;
-    float stencil_edge = stencil_sample > 0.0 ? 1.0 : 0.0;
 
     depth_sample = depth_sample * normal_mask;
     depth_sample = ceil(depth_sample - params.depth_threshold);
