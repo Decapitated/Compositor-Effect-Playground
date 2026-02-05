@@ -22,6 +22,8 @@ layout(set = 0, binding = 2) uniform sampler2D depth_texture;
 layout(set = 0, binding = 3) uniform sampler2D normal_roughness_texture;
 layout(set = 0, binding = 4) uniform sampler2D stencil_texture;
 
+layout(rgba16f, set = 0, binding = 5) uniform image2D output_image;
+
 // Our push constant.
 // Must be aligned to 16 bytes, just like the push constant we passed from the script.
 layout(push_constant, std430) uniform Params {
@@ -29,8 +31,7 @@ layout(push_constant, std430) uniform Params {
     float view;
     float debug;
     float scale;
-    float near_depth_threshold;
-    float far_depth_threshold;
+    float depth_threshold;
     float normal_threshold;
 }
 params;
@@ -147,25 +148,29 @@ void main() {
     vec2 uv_norm = vec2(uv) / params.raster_size;
 
     vec4 color = imageLoad(color_image, uv);
-    float depth = get_depth(uv_norm);
     vec4 normal = get_normal(uv_norm);
-    float stencil = get_stencil(uv_norm);
-
-    float normal_sample = sample_normal(uv_norm, scene_data_block.data.screen_pixel_size);
-    float normal_edge = stencil == 0.0 && normal_sample > params.normal_threshold ? 1.0 : 0.0;
-
-    float depth_sample = sample_depth(uv_norm, scene_data_block.data.screen_pixel_size);
-    float near_depth_threshold = params.near_depth_threshold;
-    float far_depth_threshold = params.far_depth_threshold;
-    float depth_edge = stencil == 0.0 && ((normal_sample > params.normal_threshold * 0.5 && depth_sample * 100.0 > near_depth_threshold) || (depth_sample * 100.0 > far_depth_threshold)) ? 1.0 : 0.0;
-
+    float stencil = 1.0 - get_stencil(uv_norm);
+    
+    float depth_sample = sample_depth(uv_norm, scene_data_block.data.screen_pixel_size) * stencil;
+    float normal_sample = sample_normal(uv_norm, scene_data_block.data.screen_pixel_size) * stencil;
     float stencil_sample = sample_stencil(uv_norm, scene_data_block.data.screen_pixel_size);
+
+    float normal_mask = ceil(normal_sample - 0.001);
+
+    float normal_threshold = params.normal_threshold;
+    float normal_edge = normal_sample > normal_threshold ? 1.0 : 0.0;
     float stencil_edge = stencil_sample > 0.0 ? 1.0 : 0.0;
 
-    float edge = max(max(depth_edge, normal_edge), stencil_edge);
+    depth_sample = depth_sample * normal_mask;
+    depth_sample = ceil(depth_sample - params.depth_threshold);
 
-    color = vec4(vec3(edge), 1.0);
+    normal_sample = ceil(normal_sample - params.normal_threshold);
 
+    vec3 samples = vec3(depth_sample, normal_sample, stencil_sample);
+    color = vec4(vec3(samples), 1.0);
+
+
+    imageStore(output_image, uv, color);
     if(params.debug == 1.0) {
         imageStore(color_image, uv, color);
     }

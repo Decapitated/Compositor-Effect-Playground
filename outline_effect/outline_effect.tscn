@@ -1,22 +1,9 @@
 [gd_scene format=3 uid="uid://dpiycjyqn5ovj"]
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
-[ext_resource type="Shader" uid="uid://bx2im4keidef8" path="res://write_buffer.gdshader" id="2_s72gf"]
 [ext_resource type="Script" uid="uid://dx4ulbmurbl0r" path="res://sophisticated_outline/stencil/stencil_compositor_effect.gd" id="3_g7vr4"]
 [ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://outline_effect/extraction/extraction.gd" id="3_vxeov"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_s72gf"]
-render_priority = 0
-shader = ExtResource("2_s72gf")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7r2si"]
-albedo_color = Color(0.84263474, 3.5616756e-06, 4.813075e-07, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_4x1ri"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vsri0"]
-render_priority = 0
-shader = ExtResource("2_s72gf")
+[ext_resource type="Shader" uid="uid://bjba61flufyu2" path="res://outline_effect/outline_effect.gdshader" id="4_g7vr4"]
 
 [sub_resource type="GDScript" id="GDScript_kf30h"]
 script/source = "extends Node3D
@@ -50,46 +37,55 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("3_vxeov")
 stencil_effect = SubResource("CompositorEffect_s72gf")
-far_depth_threshold = 20.0
-debug = true
+depth_threshold = 0.1
+normal_threshold = 0.1
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
 
 [sub_resource type="Compositor" id="Compositor_ygclc"]
 compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_s72gf"), SubResource("CompositorEffect_g7vr4")])
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_s72gf"]
+shader = ExtResource("4_g7vr4")
+
+[sub_resource type="GDScript" id="GDScript_vxeov"]
+script/source = "extends TextureRect
+
+@export var extraction_effect: ExtractionEffect:
+	set(value):
+		extraction_effect = value
+		if extraction_effect:
+			texture = extraction_effect.output_texture
+
+func _ready() -> void:
+	if extraction_effect:
+		texture = extraction_effect.output_texture
+"
+
 [node name="OutlineEffect" type="Node3D" unique_id=1086573737]
 
-[node name="3D Samples" parent="." unique_id=87626610 instance=ExtResource("1_kf30h")]
+[node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
-[node name="GodotPlush" parent="3D Samples" index="2" unique_id=1762547161]
-transform = Transform3D(-4.3711385e-08, 0, 0.99999994, 0, 1, 0, -0.99999994, 0, -4.3711385e-08, 0, 0, 0)
-material_overlay = SubResource("ShaderMaterial_s72gf")
+[node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]
+transform = Transform3D(0.898794, 0, 0.4383711, 0, 1, 0, -0.4383711, 0, 0.898794, 0, 0, 0)
 
-[node name="Cube" parent="3D Samples" index="3" unique_id=980552975]
-transform = Transform3D(1, 0, 0, 0, -0.976296, -0.21643965, 0, 0.21643965, -0.976296, -2, 1, 1)
-material_overlay = SubResource("ShaderMaterial_s72gf")
-
-[node name="Cube2" type="MeshInstance3D" parent="3D Samples" unique_id=1288855329]
-transform = Transform3D(1, 0, 0, 0, 0.98162717, 0.190809, 0, -0.190809, 0.98162717, -1.5, 1.4, 1)
-material_override = SubResource("StandardMaterial3D_7r2si")
-material_overlay = SubResource("ShaderMaterial_s72gf")
-mesh = SubResource("BoxMesh_4x1ri")
-
-[node name="Sphere" parent="3D Samples" index="5" unique_id=177042123]
-material_overlay = SubResource("ShaderMaterial_s72gf")
-
-[node name="Cyllinder" parent="3D Samples" index="6" unique_id=1733866371]
-material_overlay = SubResource("ShaderMaterial_s72gf")
-
-[node name="Torus" parent="3D Samples" index="7" unique_id=573777161]
-material_overlay = SubResource("ShaderMaterial_vsri0")
+[node name="Cube2" parent="3D Samples" index="7" unique_id=1043859046]
+transform = Transform3D(0.61290485, -0.44979134, -0.6496423, 0.059156843, 0.8459821, -0.5299191, 0.78793925, 0.2863592, 0.54511464, -1.88, 1.545, 0.975)
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]
-transform = Transform3D(0.9170601, 0, 0.39874908, 0, 1, 0, -0.39874908, 0, 0.9170601, 0, 0, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
 script = SubResource("GDScript_kf30h")
 
 [node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=2045132986]
-transform = Transform3D(1, 0, 0, 0, 0.9659258, 0.25881904, 0, -0.25881904, 0.9659258, 0, 3, 0)
+transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.96592575, 0, 3, 0)
 compositor = SubResource("Compositor_ygclc")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1991948559]
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=1324590132]
+material = SubResource("ShaderMaterial_s72gf")
+offset_right = 40.0
+offset_bottom = 40.0
+script = SubResource("GDScript_vxeov")
+extraction_effect = SubResource("CompositorEffect_g7vr4")
 
 [editable path="3D Samples"]
