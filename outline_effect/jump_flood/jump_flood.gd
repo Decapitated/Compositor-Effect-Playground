@@ -41,8 +41,6 @@ func _notification(what: int) -> void:
     if what == NOTIFICATION_PREDELETE:
         if _shader.is_valid():
             _rd.free_rid(_shader)
-        if _pipeline.is_valid():
-            _rd.free_rid(_pipeline)
         if _linear_sampler.is_valid():
             _rd.free_rid(_linear_sampler)
         if _texture.is_valid():
