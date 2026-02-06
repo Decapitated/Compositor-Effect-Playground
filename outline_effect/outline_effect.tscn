@@ -49,7 +49,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("4_s72gf")
 extraction_effect = SubResource("CompositorEffect_awg7p")
-samples = 8
+distance = 1000
 metadata/_custom_type_script = "uid://crv10gdfdqjmm"
 
 [sub_resource type="Compositor" id="Compositor_awg7p"]

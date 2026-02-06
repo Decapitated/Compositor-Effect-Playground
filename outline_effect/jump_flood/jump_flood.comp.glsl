@@ -45,26 +45,28 @@ vec3 get_extraction(vec2 uv) {
     return texture(extraction_texture, uv).rgb;
 }
 
-vec2 get_closest_seed(vec2 uv, vec2 texel_size) {
+vec2 get_seed(ivec2 uv) {
+    return imageLoad(output_image, uv).rg;
+}
+
+vec2 get_closest_seed(ivec2 uv, ivec2 size) {
     float min_dist = 10000000.0;
-    vec2 closest_seed = vec2(-1.0);
-    vec3 extraction_sample = get_extraction(uv);
-    if(length(extraction_sample) > 0.0) {
+    vec2 closest_seed = get_seed(uv);
+    if(closest_seed == uv) {
         return uv;
     }
     for(int i = 1; i <= int(params.samples); i++) {
         float angle = ((2.0*PI) / params.samples) * i;
         vec2 dir = vec2(cos(angle), sin(angle));
-        vec2 sample_uv = uv + dir * texel_size * params.offset;
-        if(sample_uv.x < 0.0 || sample_uv.x > 1.0 || sample_uv.y < 0.0 || sample_uv.y > 1.0) {
+        ivec2 sample_uv = ivec2(uv + dir * params.offset);
+        if(sample_uv.x < 0.0 || sample_uv.x >= size.x || sample_uv.y < 0.0 || sample_uv.y >= size.y) {
             continue;
         }
-        vec3 extraction_sample = get_extraction(sample_uv);
-        if(length(extraction_sample) > 0.0) {
-            vec2 raster_size = params.raster_size;
-            float dist_sqr = distance_sqr(uv * raster_size, sample_uv * raster_size);
+        vec2 seed_sample = get_seed(sample_uv);
+        if(seed_sample != vec2(-1.0)) {
+            float dist_sqr = distance_sqr(uv, seed_sample);
             if(dist_sqr < min_dist) {
-                closest_seed = sample_uv;
+                closest_seed = seed_sample;
                 min_dist = dist_sqr;
             }
         }
@@ -76,32 +78,30 @@ vec2 get_closest_seed(vec2 uv, vec2 texel_size) {
 void main() {
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
 
-    vec2 raster_size = params.raster_size;
-    ivec2 size = ivec2(raster_size);
+    ivec2 size = ivec2(params.raster_size);
     int view = int(params.view);
 
     if (uv.x >= size.x || uv.y >= size.y) {
         return;
     }
 
-    vec2 uv_norm = vec2(uv) / size;
-
-    vec2 closest_seed_sample = imageLoad(output_image, uv).rg;
+    vec2 closest_seed_sample = get_seed(uv);
     float css_distance_sqr = closest_seed_sample == vec2(-1.0) ?
-        10000000 : distance_sqr(uv_norm * raster_size, closest_seed_sample * raster_size);
+        10000000 : distance_sqr(uv, closest_seed_sample);
     
     vec4 color = vec4(closest_seed_sample, 0.0, 1.0);
 
     if(params.pass == 0.0) {
-        vec3 extraction_sample = get_extraction(uv);
+        vec2 uv_norm = vec2(uv) / size;
+        vec3 extraction_sample = get_extraction(uv_norm);
         if(length(extraction_sample) > 0.0) {
-            color.xy = uv_norm;
+            color.xy = uv;
         }
     }
     else if(params.pass == 1.0) {
-        vec2 closest_seed = get_closest_seed(uv_norm, scene_data_block.data.screen_pixel_size);
+        vec2 closest_seed = get_closest_seed(uv, size);
         if(closest_seed != vec2(-1.0)) {
-            float cs_distance_sqr = distance_sqr(uv_norm * raster_size, closest_seed * raster_size);
+            float cs_distance_sqr = distance_sqr(uv, closest_seed);
 
             if(cs_distance_sqr <= css_distance_sqr) {
                 color.xy = closest_seed;
