@@ -1,6 +1,8 @@
 @tool
 class_name StencilEffect extends CompositorEffect
 
+@export_range(0, 255, 1) var reference_value: int = 123
+
 var _rd: RenderingDevice = null
 
 var _shader: RID
@@ -23,6 +25,7 @@ var _cache_vertex_shader_code := ""
 var _cache_fragment_shader_code := ""
 var _cache_depth_texture: RID
 var _cache_samples: int = 0
+var _cache_reference_value: int = 0
 
 enum CallbackError {
     OK = 0,
@@ -117,7 +120,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     elif error == CallbackError.INVALID_FRAMEBUFFER:
         error = CallbackError.OK
 
-    if shader_changed || framebuffer_format_changed:
+    if shader_changed || framebuffer_format_changed || reference_value != _cache_reference_value:
         _build_pipeline()
     
     if !_pipeline.is_valid():
@@ -233,9 +236,11 @@ func _build_pipeline() -> void:
     stencil_state.front_op_compare = RenderingDevice.COMPARE_OP_EQUAL
     stencil_state.front_op_compare_mask = 0xFF
     stencil_state.front_op_write_mask = 0
-    stencil_state.front_op_reference = 1
+    stencil_state.front_op_reference = reference_value
     stencil_state.front_op_fail = RenderingDevice.STENCIL_OP_KEEP
     stencil_state.front_op_pass = RenderingDevice.STENCIL_OP_KEEP
+
+    _cache_reference_value = reference_value
 
     _pipeline = _rd.render_pipeline_create(
         _shader,

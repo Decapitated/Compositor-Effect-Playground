@@ -27,3 +27,4 @@ window/vsync/vsync_mode=0
 [rendering]
 
 anti_aliasing/screen_space_roughness_limiter/enabled=false
+anti_aliasing/quality/screen_space_aa=2
