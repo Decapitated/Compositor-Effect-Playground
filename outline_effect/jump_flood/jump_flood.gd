@@ -154,13 +154,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
             push_constant[4] = current_offset
 
             # Run compute _shader.
-            var jfa_compute_list: int = _rd.compute_list_begin()
-            _rd.compute_list_bind_compute_pipeline(jfa_compute_list, _pipeline)
-            _rd.compute_list_bind_uniform_set(jfa_compute_list, uniform_set_0, 0)
-            var jfa_push_constant_bytes := push_constant.to_byte_array()
-            _rd.compute_list_set_push_constant(jfa_compute_list, jfa_push_constant_bytes, jfa_push_constant_bytes.size())
-            _rd.compute_list_dispatch(jfa_compute_list, x_groups, y_groups, z_groups)
-            _rd.compute_list_end()
+            _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
 
             # If first pass (Seed Pass), set pass mode to 1. (JFA Pass)
             if push_constant[6] == 0.0:
@@ -172,13 +166,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         # Set pass mode to 2. (Last Pass)
         push_constant[6] = 2.0
         # Run compute _shader for last pass.
-        var compute_list: int = _rd.compute_list_begin()
-        _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
-        _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
-        var push_constant_bytes := push_constant.to_byte_array()
-        _rd.compute_list_set_push_constant(compute_list, push_constant_bytes, push_constant_bytes.size())
-        _rd.compute_list_dispatch(compute_list, x_groups, y_groups, z_groups)
-        _rd.compute_list_end()
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
 
 #region Shader
 func _check_shader() -> void:
@@ -240,3 +228,12 @@ func _create_textures(width: int, height: int) -> void:
     if _output_texture.is_valid():
         _rd.free_rid(_output_texture)
     _output_texture = new_output_texture
+
+func _run_compute(uniform_set_0: RID, push_constant: PackedFloat32Array, x_groups: int, y_groups: int, z_groups: int) -> void:
+    var compute_list: int = _rd.compute_list_begin()
+    _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
+    _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
+    var push_constant_bytes := push_constant.to_byte_array()
+    _rd.compute_list_set_push_constant(compute_list, push_constant_bytes, push_constant_bytes.size())
+    _rd.compute_list_dispatch(compute_list, x_groups, y_groups, z_groups)
+    _rd.compute_list_end()
