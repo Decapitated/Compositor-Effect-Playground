@@ -22,7 +22,8 @@ layout(rgba16f, set = 0, binding = 1) uniform image2D color_image;
 
 layout(set = 0, binding = 2) uniform sampler2D extraction_texture;
 
-layout(rgba16f, set = 0, binding = 3) uniform image2D output_image;
+layout(rgba16f, set = 0, binding = 3) uniform image2D jump_flood_image;
+layout(rgba16f, set = 0, binding = 4) uniform image2D output_image;
 
 // Our push constant.
 // Must be aligned to 16 bytes, just like the push constant we passed from the script.
@@ -46,7 +47,7 @@ vec3 get_extraction(vec2 uv) {
 }
 
 vec2 get_seed(ivec2 uv) {
-    return imageLoad(output_image, uv).rg;
+    return imageLoad(jump_flood_image, uv).rg;
 }
 
 vec2 get_closest_seed(ivec2 uv, ivec2 size) {
@@ -113,7 +114,12 @@ void main() {
         color.rgb = vec3(dist);
     }
 
-    imageStore(output_image, uv, color);
+    if(params.pass == 2.0) {
+        imageStore(output_image, uv, color);
+    } else {
+        imageStore(jump_flood_image, uv, color);
+    }
+
     if(params.debug == 1.0) {
         imageStore(color_image, uv, color / vec4(vec3(1000.0), 1.0));
     }

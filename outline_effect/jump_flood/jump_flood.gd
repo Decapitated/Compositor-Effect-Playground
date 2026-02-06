@@ -14,7 +14,8 @@ var _pipeline: RID
 var _linear_sampler: RID
 
 var _texture_format: RDTextureFormat = RDTextureFormat.new()
-var _texture: RID
+var _jump_flood_texture: RID
+var _output_texture: RID
 var output_texture: Texture2DRD = Texture2DRD.new()
 
 var _cache_shader_code := ""
@@ -43,8 +44,10 @@ func _notification(what: int) -> void:
             _rd.free_rid(_shader)
         if _linear_sampler.is_valid():
             _rd.free_rid(_linear_sampler)
-        if _texture.is_valid():
-            _rd.free_rid(_texture)
+        if _jump_flood_texture.is_valid():
+            _rd.free_rid(_jump_flood_texture)
+        if _output_texture.is_valid():
+            _rd.free_rid(_output_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
     if extraction_effect == null:
@@ -76,10 +79,10 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var size: Vector2i = scene_buffers.get_internal_size()
     if size.x == 0 && size.y == 0:
         return
-
-    if !_texture.is_valid() || \
+    
+    if !_output_texture.is_valid() || !_jump_flood_texture.is_valid() || \
             _texture_format.width != size.x || _texture_format.height != size.y:
-        _create_output_texture(size.x, size.y)
+        _create_textures(size.x, size.y)
 
     @warning_ignore("integer_division")
     var x_groups: int = (size.x - 1) / 16 + 1
@@ -100,7 +103,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     # Run compute for each view.    
     var view_count: int = scene_buffers.get_view_count()
     for view in view_count:
-        _rd.texture_clear(_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
         
         # Set view.
         push_constant[2] = view
@@ -131,14 +134,19 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         extraction_uniform.binding = 2
         extraction_uniform.add_id(_linear_sampler)
         extraction_uniform.add_id(extraction_effect.output_texture.texture_rd_rid)
+        # Jump Flood Image
+        var jump_flood_uniform := RDUniform.new()
+        jump_flood_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+        jump_flood_uniform.binding = 3
+        jump_flood_uniform.add_id(_jump_flood_texture)
         # Output Image
         var output_uniform := RDUniform.new()
         output_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-        output_uniform.binding = 3
-        output_uniform.add_id(_texture)
+        output_uniform.binding = 4
+        output_uniform.add_id(_output_texture)
         #endregion
 
-        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, output_uniform])
+        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, jump_flood_uniform, output_uniform])
 
         var current_offset: float = distance
         while current_offset >= 1.0:
@@ -208,7 +216,7 @@ func _build_shader(shader_code: String) -> RID:
     return new_shader
 #endregion
 
-func _create_output_texture(width: int, height: int) -> void:
+func _create_textures(width: int, height: int) -> void:
     _texture_format = RDTextureFormat.new()
     _texture_format.width = width
     _texture_format.height = height
@@ -220,9 +228,15 @@ func _create_output_texture(width: int, height: int) -> void:
         RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
         RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT # Allows us to clear the texture.
 
-    var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
-    output_texture.texture_rd_rid = new_texture
+    # Create Jump Flood Texture
+    var new_jump_flood_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    if _jump_flood_texture.is_valid():
+        _rd.free_rid(_jump_flood_texture)
+    _jump_flood_texture = new_jump_flood_texture
 
-    if _texture.is_valid():
-        _rd.free_rid(_texture)
-    _texture = new_texture
+    # Create Output Texture
+    var new_output_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    output_texture.texture_rd_rid = new_output_texture
+    if _output_texture.is_valid():
+        _rd.free_rid(_output_texture)
+    _output_texture = new_output_texture
