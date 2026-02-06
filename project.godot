@@ -23,3 +23,7 @@ window/vsync/vsync_mode=0
 [physics]
 
 3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+anti_aliasing/screen_space_roughness_limiter/enabled=false

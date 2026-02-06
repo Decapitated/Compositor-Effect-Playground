@@ -196,9 +196,6 @@ func _build_shader(vertex_shader_code: String, fragment_shader_code: String) -> 
     return new_shader
 
 func _build_framebuffer(samples: int) -> bool:
-    # if _framebuffer.is_valid():
-    #     _rd.free_rid(_framebuffer)
-    
     if !_cache_depth_texture.is_valid():
         return false
     

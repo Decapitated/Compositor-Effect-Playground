@@ -1,21 +1,16 @@
 @tool
-class_name JumpFloodEffect extends CompositorEffect
+class_name OutlineEffect extends CompositorEffect
 
-@export var extraction_effect: ExtractionEffect
+@export var jump_flood_effect: JumpFloodEffect
 
-@export_range(1, 10, 1, "or_greater") var distance: int = 10
-@export_range(3, 32, 1) var samples: int = 4
-@export var debug := false
+@export_range(1, 10, 1, "or_greater") var line_width: int = 10
+@export var line_color: Color = Color.BLACK
 
 var _rd: RenderingDevice = null
 
 var _shader: RID
 var _pipeline: RID
 var _linear_sampler: RID
-
-var _texture_format: RDTextureFormat = RDTextureFormat.new()
-var _texture: RID
-var output_texture: Texture2DRD = Texture2DRD.new()
 
 var _cache_shader_code := ""
 
@@ -45,11 +40,9 @@ func _notification(what: int) -> void:
             _rd.free_rid(_pipeline)
         if _linear_sampler.is_valid():
             _rd.free_rid(_linear_sampler)
-        if _texture.is_valid():
-            _rd.free_rid(_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
-    if extraction_effect == null:
+    if jump_flood_effect == null:
         return
 
     _check_shader()
@@ -79,10 +72,6 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     if size.x == 0 && size.y == 0:
         return
 
-    if !_texture.is_valid() || \
-            _texture_format.width != size.x || _texture_format.height != size.y:
-        _create_output_texture(size.x, size.y)
-
     @warning_ignore("integer_division")
     var x_groups: int = (size.x - 1) / 16 + 1
     @warning_ignore("integer_division")
@@ -92,18 +81,16 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var push_constant := PackedFloat32Array([
         size.x, size.y, # Raster Size                  (8) (8)
         0.0,            # View                         (4) (12)
-        float(debug),   # Debug                        (4) (16)
-        0.0,            # Offset                       (4) (4)
-        float(samples), # Samples                      (4) (8)
-        0.0,            # Pass                         (4) (12)
-        0.0,            # Padding                      (4) (16)
+        line_width,     # Width                        (4) (16)
+        line_color.r,   # Color                        (16)(16)
+        line_color.g,
+        line_color.b,
+        line_color.a,   
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    
     var view_count: int = scene_buffers.get_view_count()
     for view in view_count:
-        _rd.texture_clear(_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
-        
         # Set view.
         push_constant[2] = view
 
@@ -127,45 +114,17 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         color_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
         color_uniform.binding = 1
         color_uniform.add_id(color_image)
-        # Extraction Image
-        var extraction_uniform := RDUniform.new()
-        extraction_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
-        extraction_uniform.binding = 2
-        extraction_uniform.add_id(_linear_sampler)
-        extraction_uniform.add_id(extraction_effect.output_texture.texture_rd_rid)
-        # Output Image
-        var output_uniform := RDUniform.new()
-        output_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-        output_uniform.binding = 3
-        output_uniform.add_id(_texture)
+        # Jump Flood Image
+        var jump_flood_uniform := RDUniform.new()
+        jump_flood_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
+        jump_flood_uniform.binding = 2
+        jump_flood_uniform.add_id(_linear_sampler)
+        jump_flood_uniform.add_id(jump_flood_effect.output_texture.texture_rd_rid)
         #endregion
 
-        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, output_uniform])
+        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, jump_flood_uniform])
 
-        var current_offset: float = distance
-        while current_offset >= 1.0:
-            # Set offset.
-            push_constant[4] = current_offset
-
-            # Run compute _shader.
-            var jfa_compute_list: int = _rd.compute_list_begin()
-            _rd.compute_list_bind_compute_pipeline(jfa_compute_list, _pipeline)
-            _rd.compute_list_bind_uniform_set(jfa_compute_list, uniform_set_0, 0)
-            var jfa_push_constant_bytes := push_constant.to_byte_array()
-            _rd.compute_list_set_push_constant(jfa_compute_list, jfa_push_constant_bytes, jfa_push_constant_bytes.size())
-            _rd.compute_list_dispatch(jfa_compute_list, x_groups, y_groups, z_groups)
-            _rd.compute_list_end()
-
-            # If first pass (Seed Pass), set pass mode to 1. (JFA Pass)
-            if push_constant[6] == 0.0:
-                push_constant[6] = 1.0
-            else:
-                # Update offset for next pass.
-                current_offset /= 2.0
-        
-        # Set pass mode to 2. (Last Pass)
-        push_constant[6] = 2.0
-        # Run compute _shader for last pass.
+         # Run compute _shader for last pass.
         var compute_list: int = _rd.compute_list_begin()
         _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
         _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
@@ -187,12 +146,12 @@ func _check_shader() -> void:
             _pipeline = _rd.compute_pipeline_create(_shader)
 
 func _get_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/jump_flood/jump_flood.comp.glsl")
+    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/outline/outline.comp.glsl")
     assert(!shader_code.is_empty(), "Shader code is empty")
     return shader_code
 
 func _build_shader(shader_code: String) -> RID:
-    print("Building extraction _shader...")
+    print("Building outline _shader...")
     var shader_source := RDShaderSource.new()
     shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
     shader_source.source_compute = shader_code
@@ -211,22 +170,3 @@ func _build_shader(shader_code: String) -> RID:
 
     return new_shader
 #endregion
-
-func _create_output_texture(width: int, height: int) -> void:
-    _texture_format = RDTextureFormat.new()
-    _texture_format.width = width
-    _texture_format.height = height
-    _texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT
-    _texture_format.usage_bits = \
-        RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
-        RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
-        RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
-        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
-        RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT # Allows us to clear the texture.
-
-    var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
-    output_texture.texture_rd_rid = new_texture
-
-    if _texture.is_valid():
-        _rd.free_rid(_texture)
-    _texture = new_texture

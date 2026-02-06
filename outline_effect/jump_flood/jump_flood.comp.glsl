@@ -55,7 +55,7 @@ vec2 get_closest_seed(ivec2 uv, ivec2 size) {
     if(closest_seed == uv) {
         return uv;
     }
-    for(int i = 1; i <= int(params.samples); i++) {
+    for(int i = 0; i < int(params.samples); i++) {
         float angle = ((2.0*PI) / params.samples) * i;
         vec2 dir = vec2(cos(angle), sin(angle));
         ivec2 sample_uv = ivec2(uv + dir * params.offset);
