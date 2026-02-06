@@ -6,6 +6,18 @@
 [ext_resource type="Script" uid="uid://crv10gdfdqjmm" path="res://outline_effect/jump_flood/jump_flood.gd" id="4_s72gf"]
 [ext_resource type="Script" uid="uid://uauh2w1q8ntw" path="res://outline_effect/outline/outline.gd" id="5_vsri0"]
 
+[sub_resource type="GDScript" id="GDScript_s72gf"]
+script/source = "extends MeshInstance3D
+
+@export_range(1.0, 10.0, 0.1, \"or_greater\") var duration := 5.0
+
+func _ready() -> void:
+	var tween := create_tween()
+	tween.tween_property(self, \"rotation:y\", 180.0, duration / 2.0)
+	tween.tween_property(self, \"rotation:y\", 360.0, duration / 2.0)
+	tween.set_loops()
+"
+
 [sub_resource type="GDScript" id="GDScript_kf30h"]
 script/source = "extends Node3D
 
@@ -64,7 +76,6 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("5_vsri0")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
-line_width = 2
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [sub_resource type="Compositor" id="Compositor_awg7p"]
@@ -75,10 +86,12 @@ compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
 [node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]
-transform = Transform3D(0.8120834, 0, -0.58354115, 0, 1, 0, 0.58354115, 0, 0.8120834, 0, 0, 0)
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 0.9999999, 0, 0, 0)
+script = SubResource("GDScript_s72gf")
+duration = 1000.0
 
 [node name="Cube2" parent="3D Samples" index="7" unique_id=1043859046]
-transform = Transform3D(0.47050652, 0.85472226, -0.2192556, -0.19695236, -0.1404847, -0.97029537, -0.8601357, 0.49971327, 0.10224058, -1.885, 1.72, 0.66)
+transform = Transform3D(0.9999863, 0, 0.005235962, 0, 0.9999997, 0, -0.005235964, 0, 0.99998593, -1.41, 1.72, 1.63)
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
