@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://c0r6idvcjwx2h"]
+
+[sub_resource type="GDScript" id="GDScript_kf30h"]
+script/source = "extends Node3D
+
+func _ready() -> void:
+	var tween = create_tween()
+	tween.tween_property(self, \"rotation:y\", PI/4.0, 2.0)
+	tween.tween_property(self, \"rotation:y\", 0.0, 2.0)
+	tween.tween_property(self, \"rotation:y\", -PI/4.0, 2.0)
+	tween.tween_property(self, \"rotation:y\", 0.0, 2.0)
+	tween.set_loops()
+"
+
+[node name="CamStand" type="Node3D" unique_id=134836692]
+script = SubResource("GDScript_kf30h")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=2045132986]
+transform = Transform3D(1, 0, 0, 0, 0.9659259, 0.25881907, 0, -0.25881907, 0.9659258, 0, 3, 0)

@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bw4ta6bpkrtjx"]
+
+[ext_resource type="Shader" uid="uid://ceap1cori15to" path="res://toon_shading.gdshader" id="1_yend2"]
+[ext_resource type="Texture2D" uid="uid://k6okhmvexu4f" path="res://toon_color_ramp.tres" id="2_d36p8"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_yend2")
+shader_parameter/use_albedo_texture = false
+shader_parameter/albedo_color = Color(1, 1, 1, 1)
+shader_parameter/color_ramp = ExtResource("2_d36p8")
