@@ -3,7 +3,7 @@ class_name OutlineEffect extends CompositorEffect
 
 @export var jump_flood_effect: JumpFloodEffect
 
-@export_range(1, 10, 1, "or_greater") var line_width: int = 10
+@export_range(1, 10, 1, "or_greater") var line_width: int = 1
 @export var line_color: Color = Color.BLACK
 
 var _rd: RenderingDevice = null

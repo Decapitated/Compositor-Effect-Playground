@@ -54,10 +54,9 @@ void main() {
     vec4 color = imageLoad(color_image, uv);
 
     vec4 line_color = params.line_color;
-    float edge = distance_sample <= params.line_width ? 1.0 : 0.0;
+    float edge = 1.0 - clamp(ceil(distance_sample - params.line_width), 0.0, 1.0);
 
     color.rgb = mix(color.rgb, line_color.rgb, line_color.a * edge);
-    // color.rgb = vec3(edge);
 
     imageStore(color_image, uv, color);
 }
