@@ -172,13 +172,12 @@ func _get_fragment_shader_code() -> String:
     return shader_code
 
 func _build_shader(vertex_shader_code: String, fragment_shader_code: String) -> RID:
-    print("Building stencil _shader...")
+    print("Building stencil shader...")
     var shader_source := RDShaderSource.new()
     shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
     shader_source.source_vertex = vertex_shader_code
     shader_source.source_fragment = fragment_shader_code
 
-    print("Compiling spirv...")
     var shader_spirv: RDShaderSPIRV = _rd.shader_compile_spirv_from_source(shader_source)
     if shader_spirv.compile_error_vertex != "":
         push_error(shader_spirv.compile_error_vertex)
@@ -194,7 +193,6 @@ func _build_shader(vertex_shader_code: String, fragment_shader_code: String) -> 
         push_error(fragment_shader_code.split("\n")[int(error_offset) - 2])
         return RID()
     
-    print("Creating _shader...")
     var new_shader := _rd.shader_create_from_spirv(shader_spirv)
     if not new_shader.is_valid():
         push_error("Shader is invalid")
