@@ -64,6 +64,10 @@ func _notification(what):
             _rd.free_rid(_vertex_array)
         if _vertex_buffer.is_valid():
             _rd.free_rid(_vertex_buffer)
+        if _shader.is_valid():
+            _rd.free_rid(_shader)
+        if _texture.is_valid():
+            _rd.free_rid(_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
     var shader_changed := _check_shader()
