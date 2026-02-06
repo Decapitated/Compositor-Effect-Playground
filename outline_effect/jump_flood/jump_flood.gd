@@ -1,10 +1,13 @@
 @tool
-class_name ExtractionEffect extends CompositorEffect
+class_name JumpFloodEffect extends CompositorEffect
 
-@export var stencil_effect: StencilEffect
-@export_range(1, 10, 1, "or_greater") var scale := 1
-@export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold := 0.05
-@export_range(0.0, 10.0, 0.001, "or_greater") var normal_threshold := 0.5
+@export var extraction_effect: ExtractionEffect
+
+@export_range(1, 10, 1, "or_greater") var distance: int = 10:
+    set(value):
+        distance = value
+        print("Passes: %s" % _get_num_passes())
+@export_range(3, 32, 1) var samples: int = 4
 @export var debug := false
 
 var _rd: RenderingDevice = null
@@ -24,19 +27,17 @@ enum CallbackError {
     INVALID_PIPELINE,
     INVALID_RENDER_DATA,
     INVALID_COLOR_TEXTURE,
-    INVALID_DEPTH_TEXTURE,
-    INVALID_NORMAL_TEXTURE
 }
 var error: CallbackError = CallbackError.OK
 
 func _init() -> void:
-    effect_callback_type = EFFECT_CALLBACK_TYPE_POST_TRANSPARENT
+    effect_callback_type = CompositorEffect.EFFECT_CALLBACK_TYPE_POST_TRANSPARENT
 
     _rd = RenderingServer.get_rendering_device()
 
     var linear_sampler_state: RDSamplerState = RDSamplerState.new()
-    linear_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
-    linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
+    linear_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
+    linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
     _linear_sampler = _rd.sampler_create(linear_sampler_state)
 
 func _notification(what: int) -> void:
@@ -51,7 +52,7 @@ func _notification(what: int) -> void:
             _rd.free_rid(_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
-    if stencil_effect == null:
+    if extraction_effect == null:
         return
 
     _check_shader()
@@ -81,7 +82,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     if size.x == 0 && size.y == 0:
         return
 
-    if !output_texture.texture_rd_rid.is_valid() || \
+    if !_texture.is_valid() || \
             _texture_format.width != size.x || _texture_format.height != size.y:
         _create_output_texture(size.x, size.y)
 
@@ -92,22 +93,23 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var z_groups: int = 1
 
     var push_constant := PackedFloat32Array([
-        size.x, size.y,               # Raster Size                  (8) (8)
-        0.0,                          # View                         (4) (12)
-        float(debug),                 # Debug                        (4) (16)
-        float(scale),                 # Scale                        (4) (4)
-        depth_threshold,              # Depth Theshold               (4) (8)
-        normal_threshold,             # Normal Threshold             (4) (12)
-        0.0,                          # Padding                     (4) (16)
+        size.x, size.y, # Raster Size                  (8) (8)
+        0.0,            # View                         (4) (12)
+        float(debug),   # Debug                        (4) (16)
+        0.0,            # Offset                       (4) (4)
+        float(samples), # Samples                      (4) (8)
+        0.0,            # Pass                         (4) (12)
+        0.0,            # Padding                      (4) (16)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    
     var view_count: int = scene_buffers.get_view_count()
     for view in view_count:
+        _rd.texture_clear(_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        
         # Set view.
         push_constant[2] = view
 
-        #region Retrieve & Check Textures
         var color_image: RID = scene_buffers.get_color_layer(view)
         if !color_image.is_valid():
             if error != CallbackError.INVALID_COLOR_TEXTURE:
@@ -116,26 +118,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
             return
         elif error == CallbackError.INVALID_COLOR_TEXTURE:
             error = CallbackError.OK
-
-        var depth_image: RID = scene_buffers.get_depth_layer(view)
-        if !depth_image.is_valid():
-            if error != CallbackError.INVALID_DEPTH_TEXTURE:
-                error = CallbackError.INVALID_DEPTH_TEXTURE
-                push_error("Depth texture is invalid")
-            return
-        elif error == CallbackError.INVALID_DEPTH_TEXTURE:
-            error = CallbackError.OK
-
-        var normal_image: RID = scene_buffers.get_texture("forward_clustered", "normal_roughness")
-        if !normal_image.is_valid():
-            if error != CallbackError.INVALID_NORMAL_TEXTURE:
-                error = CallbackError.INVALID_NORMAL_TEXTURE
-                push_error("Normal texture is invalid")
-            return
-        elif error == CallbackError.INVALID_NORMAL_TEXTURE:
-            error = CallbackError.OK
-        #endregion
-
+        
         #region Set 0 Uniforms
         # Scene Data
         var scene_data_uniform := RDUniform.new()
@@ -147,34 +130,43 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         color_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
         color_uniform.binding = 1
         color_uniform.add_id(color_image)
-        # Depth Image
-        var depth_uniform := RDUniform.new()
-        depth_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
-        depth_uniform.binding = 2
-        depth_uniform.add_id(_linear_sampler)
-        depth_uniform.add_id(depth_image)
-        # Normal Image
-        var normal_uniform := RDUniform.new()
-        normal_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
-        normal_uniform.binding = 3
-        normal_uniform.add_id(_linear_sampler)
-        normal_uniform.add_id(normal_image)
-        # Stencil Image
-        var stencil_uniform := RDUniform.new()
-        stencil_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
-        stencil_uniform.binding = 4
-        stencil_uniform.add_id(_linear_sampler)
-        stencil_uniform.add_id(stencil_effect.output_texture.texture_rd_rid)
+        # Extraction Image
+        var extraction_uniform := RDUniform.new()
+        extraction_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
+        extraction_uniform.binding = 2
+        extraction_uniform.add_id(_linear_sampler)
+        extraction_uniform.add_id(extraction_effect.output_texture.texture_rd_rid)
         # Output Image
         var output_uniform := RDUniform.new()
         output_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-        output_uniform.binding = 5
+        output_uniform.binding = 3
         output_uniform.add_id(_texture)
         #endregion
 
-        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, depth_uniform, normal_uniform, stencil_uniform, output_uniform])
+        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, output_uniform])
 
-        # Run compute _shader.
+        var current_offset: float = distance * 2.0
+        while current_offset >= 1.0:
+            # Set offset.
+            push_constant[4] = current_offset
+
+            # Run compute _shader.
+            var jfa_compute_list: int = _rd.compute_list_begin()
+            _rd.compute_list_bind_compute_pipeline(jfa_compute_list, _pipeline)
+            _rd.compute_list_bind_uniform_set(jfa_compute_list, uniform_set_0, 0)
+            var jfa_push_constant_bytes := push_constant.to_byte_array()
+            _rd.compute_list_set_push_constant(jfa_compute_list, jfa_push_constant_bytes, jfa_push_constant_bytes.size())
+            _rd.compute_list_dispatch(jfa_compute_list, x_groups, y_groups, z_groups)
+            _rd.compute_list_end()
+
+            # Update offset for next pass.
+            current_offset /= 2.0
+
+            if push_constant[6] == 0.0:
+                push_constant[6] = 1.0
+        
+        push_constant[6] = 2.0
+        # Run compute _shader for last pass.
         var compute_list: int = _rd.compute_list_begin()
         _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
         _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
@@ -195,7 +187,7 @@ func _check_shader() -> void:
             _pipeline = _rd.compute_pipeline_create(_shader)
 
 func _get_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/extraction/extraction.comp.glsl")
+    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/jump_flood/jump_flood.comp.glsl")
     assert(!shader_code.is_empty(), "Shader code is empty")
     return shader_code
 
@@ -228,7 +220,8 @@ func _create_output_texture(width: int, height: int) -> void:
         RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
         RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
         RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
-        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
+        RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT # Allows us to clear the texture.
 
     var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
     output_texture.texture_rd_rid = new_texture
@@ -236,3 +229,6 @@ func _create_output_texture(width: int, height: int) -> void:
     if _texture.is_valid():
         _rd.free_rid(_texture)
     _texture = new_texture
+
+func _get_num_passes() -> int:
+    return int(pow(2.0, ceil(log(distance) / log(2.0))))

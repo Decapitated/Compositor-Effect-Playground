@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://outline_effect/stencil/stencil.gd" id="2_s72gf"]
 [ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://outline_effect/extraction/extraction.gd" id="3_vxeov"]
 [ext_resource type="Shader" uid="uid://bjba61flufyu2" path="res://outline_effect/outline_effect.gdshader" id="4_g7vr4"]
+[ext_resource type="Script" uid="uid://crv10gdfdqjmm" path="res://outline_effect/jump_flood/jump_flood.gd" id="4_s72gf"]
 
 [sub_resource type="GDScript" id="GDScript_kf30h"]
 script/source = "extends Node3D
@@ -36,29 +37,40 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("3_vxeov")
 stencil_effect = SubResource("CompositorEffect_vsri0")
-depth_threshold = 0.1
-normal_threshold = 0.15
-debug = true
+normal_threshold = 0.175
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
 
+[sub_resource type="CompositorEffect" id="CompositorEffect_gbl11"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("4_s72gf")
+extraction_effect = SubResource("CompositorEffect_awg7p")
+samples = 8
+metadata/_custom_type_script = "uid://crv10gdfdqjmm"
+
 [sub_resource type="Compositor" id="Compositor_awg7p"]
-compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri0"), SubResource("CompositorEffect_awg7p")])
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri0"), SubResource("CompositorEffect_awg7p"), SubResource("CompositorEffect_gbl11")])
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_s72gf"]
 shader = ExtResource("4_g7vr4")
+shader_parameter/width = 2.0
 
 [sub_resource type="GDScript" id="GDScript_vxeov"]
 script/source = "extends TextureRect
 
-@export var extraction_effect: ExtractionEffect:
+@export var effect: JumpFloodEffect:
 	set(value):
-		extraction_effect = value
-		if extraction_effect:
-			texture = extraction_effect.output_texture
+		effect = value
+		if effect:
+			texture = effect.output_texture
 
 func _ready() -> void:
-	if extraction_effect:
-		texture = extraction_effect.output_texture
+	if effect:
+		texture = effect.output_texture
 "
 
 [node name="OutlineEffect" type="Node3D" unique_id=1086573737]
@@ -66,10 +78,10 @@ func _ready() -> void:
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
 [node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]
-transform = Transform3D(0.7071067, 0, -0.7071067, 0, 1, 0, 0.7071067, 0, 0.7071067, 0, 0, 0)
+transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 0.9999999, 0, 0, 0)
 
 [node name="Cube2" parent="3D Samples" index="7" unique_id=1043859046]
-transform = Transform3D(0.61290485, -0.44979134, -0.6496423, 0.059156843, 0.8459821, -0.5299191, 0.78793925, 0.2863592, 0.54511464, -1.88, 1.545, 0.975)
+transform = Transform3D(1, 0, 0, 0, 0.9999997, 0, 0, 0, 0.99999964, -1.31, 1.545, 1.445)
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
@@ -86,6 +98,6 @@ material = SubResource("ShaderMaterial_s72gf")
 offset_right = 40.0
 offset_bottom = 40.0
 script = SubResource("GDScript_vxeov")
-extraction_effect = SubResource("CompositorEffect_awg7p")
+effect = SubResource("CompositorEffect_gbl11")
 
 [editable path="3D Samples"]
