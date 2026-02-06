@@ -74,6 +74,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("5_vsri0")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
+outside_width = 1
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [sub_resource type="Compositor" id="Compositor_awg7p"]
