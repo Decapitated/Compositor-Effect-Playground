@@ -85,12 +85,16 @@ compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri
 
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
+[node name="DirectionalLight3D" parent="3D Samples/WorldEnvironment" parent_id_path=PackedInt32Array(1926476177, 793794692) index="0" unique_id=935803027]
+transform = Transform3D(0.92387944, 0.19134173, -0.33141357, 0, 0.8660254, 0.49999997, 0.38268343, -0.46193975, 0.80010307, 0, 0, 0)
+shadow_enabled = true
+
 [node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 0.9999999, 0, 0, 0)
 script = SubResource("GDScript_s72gf")
 duration = 1000.0
 
-[node name="Cube2" parent="3D Samples" index="7" unique_id=1043859046]
+[node name="Cube2" parent="3D Samples" index="4" unique_id=1043859046]
 transform = Transform3D(0.9999863, 0, 0.005235962, 0, 0.9999997, 0, -0.005235964, 0, 0.99998593, -1.41, 1.72, 1.63)
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]

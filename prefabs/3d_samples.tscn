@@ -2,8 +2,10 @@
 
 [ext_resource type="Environment" uid="uid://bfjush7w8wub" path="res://world_environment.tres" id="1_7r2si"]
 [ext_resource type="Shader" uid="uid://b6ddxyv68vt61" path="res://grid.gdshader" id="2_s5uh6"]
-[ext_resource type="Material" uid="uid://b4vvpd8uryexx" path="res://assets/godot_plush_model/godot_plush_mat.tres" id="3_spab8"]
+[ext_resource type="Shader" uid="uid://ceap1cori15to" path="res://toon_shading.gdshader" id="3_uk8lx"]
 [ext_resource type="Shader" uid="uid://bx2im4keidef8" path="res://write_buffer.gdshader" id="4_s5uh6"]
+[ext_resource type="Texture2D" uid="uid://chptmk32p2njn" path="res://assets/godot_plush_model/godot_plush_albedo.png" id="4_xw6jf"]
+[ext_resource type="Texture2D" uid="uid://k6okhmvexu4f" path="res://toon_color_ramp.tres" id="5_p060g"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_4x1ri"]
 render_priority = 0
@@ -36,6 +38,14 @@ shader_parameter/uv1_offset = Vector3(0, 0, 0)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_vxeov"]
 size = Vector2(1000, 1000)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uk8lx"]
+render_priority = 0
+shader = ExtResource("3_uk8lx")
+shader_parameter/use_albedo_texture = true
+shader_parameter/albedo_color = Color(1, 1, 1, 1)
+shader_parameter/albedo_texture = ExtResource("4_xw6jf")
+shader_parameter/color_ramp = ExtResource("5_p060g")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_s72gf"]
 render_priority = 0
@@ -149,35 +159,48 @@ bind/15/name = &"DEF-toe.R"
 bind/15/bone = -1
 bind/15/pose = Transform3D(-0.9999999, 0.00034538106, -2.484507e-11, -8.5175166e-12, 5.960465e-08, 1, 0.00034538098, 1, -2.9802317e-08, -0.18643, -0.17493382, -0.0082855765)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7r2si"]
-albedo_color = Color(0.84263474, 3.5616756e-06, 4.813075e-07, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xw6jf"]
+render_priority = 0
+shader = ExtResource("3_uk8lx")
+shader_parameter/use_albedo_texture = false
+shader_parameter/albedo_color = Color(1, 0, 0, 1)
+shader_parameter/color_ramp = ExtResource("5_p060g")
 
 [sub_resource type="BoxMesh" id="BoxMesh_4x1ri"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_s5uh6"]
-albedo_color = Color(0, 0.84313726, 0, 1)
+[sub_resource type="BoxMesh" id="BoxMesh_p060g"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_p060g"]
+render_priority = 0
+shader = ExtResource("3_uk8lx")
+shader_parameter/use_albedo_texture = false
+shader_parameter/albedo_color = Color(0, 1, 0, 1)
+shader_parameter/color_ramp = ExtResource("5_p060g")
 
 [sub_resource type="SphereMesh" id="SphereMesh_spab8"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spab8"]
-albedo_color = Color(0, 0, 0.84313726, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_m6xdg"]
+render_priority = 0
+shader = ExtResource("3_uk8lx")
+shader_parameter/use_albedo_texture = false
+shader_parameter/albedo_color = Color(0, 0, 1, 1)
+shader_parameter/color_ramp = ExtResource("5_p060g")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_7r2si"]
 height = 1.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uk8lx"]
-albedo_color = Color(0.75686276, 0, 0.84313726, 1)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8cq4a"]
+render_priority = 0
+shader = ExtResource("3_uk8lx")
+shader_parameter/use_albedo_texture = false
+shader_parameter/albedo_color = Color(1, 0, 1, 1)
+shader_parameter/color_ramp = ExtResource("5_p060g")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vsri0"]
 render_priority = 0
 shader = ExtResource("4_s5uh6")
 
 [sub_resource type="TorusMesh" id="TorusMesh_xw6jf"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xw6jf"]
-albedo_color = Color(0.84263474, 3.5616756e-06, 4.813075e-07, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_p060g"]
 
 [node name="3D Samples" type="Node3D" unique_id=1926476177]
 
@@ -192,38 +215,38 @@ material_override = SubResource("ShaderMaterial_4x1ri")
 mesh = SubResource("PlaneMesh_vxeov")
 
 [node name="GodotPlush" type="MeshInstance3D" parent="." unique_id=697354579]
-transform = Transform3D(0.8433914, 0, 0.5372995, 0, 1, 0, -0.5372995, 0, 0.8433914, 0, 0, 0)
-material_override = ExtResource("3_spab8")
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0, 0, 0)
+material_override = SubResource("ShaderMaterial_uk8lx")
 material_overlay = SubResource("ShaderMaterial_s72gf")
 mesh = SubResource("ArrayMesh_87yac")
 skin = SubResource("Skin_vee50")
 
 [node name="Cube" type="MeshInstance3D" parent="." unique_id=220645440]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, 1)
-material_override = SubResource("StandardMaterial3D_7r2si")
+material_override = SubResource("ShaderMaterial_xw6jf")
 material_overlay = SubResource("ShaderMaterial_s72gf")
 mesh = SubResource("BoxMesh_4x1ri")
 
+[node name="Cube2" type="MeshInstance3D" parent="." unique_id=1043859046]
+transform = Transform3D(0.8279601, 0.16955613, -0.5345397, 0.06421117, 0.9182623, 0.390731, 0.55709887, -0.3578331, 0.74939704, -1.88, 1.545, 0.975)
+material_override = SubResource("ShaderMaterial_xw6jf")
+material_overlay = SubResource("ShaderMaterial_s72gf")
+mesh = SubResource("BoxMesh_p060g")
+
 [node name="Sphere" type="MeshInstance3D" parent="." unique_id=501850454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, 1)
-material_override = SubResource("StandardMaterial3D_s5uh6")
+material_override = SubResource("ShaderMaterial_p060g")
 material_overlay = SubResource("ShaderMaterial_s72gf")
 mesh = SubResource("SphereMesh_spab8")
 
 [node name="Cyllinder" type="MeshInstance3D" parent="." unique_id=1594716006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, 1)
-material_override = SubResource("StandardMaterial3D_spab8")
+material_override = SubResource("ShaderMaterial_m6xdg")
 material_overlay = SubResource("ShaderMaterial_s72gf")
 mesh = SubResource("CylinderMesh_7r2si")
 
 [node name="Torus" type="MeshInstance3D" parent="." unique_id=2140150426]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1, 1)
-material_override = SubResource("StandardMaterial3D_uk8lx")
+material_override = SubResource("ShaderMaterial_8cq4a")
 material_overlay = SubResource("ShaderMaterial_vsri0")
 mesh = SubResource("TorusMesh_xw6jf")
-
-[node name="Cube2" type="MeshInstance3D" parent="." unique_id=1043859046]
-transform = Transform3D(0.8279601, 0.16955613, -0.5345397, 0.06421117, 0.9182623, 0.390731, 0.55709887, -0.3578331, 0.74939704, -1.88, 1.545, 0.975)
-material_override = SubResource("StandardMaterial3D_xw6jf")
-material_overlay = SubResource("ShaderMaterial_s72gf")
-mesh = SubResource("BoxMesh_p060g")
