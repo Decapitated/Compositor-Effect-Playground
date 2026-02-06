@@ -22,7 +22,8 @@ layout(rgba16f, set = 0, binding = 1) uniform image2D color_image;
 
 layout(set = 0, binding = 2) uniform sampler2D extraction_texture;
 
-layout(rgba16f, set = 0, binding = 3) uniform image2D output_image;
+layout(rgba16f, set = 0, binding = 3) uniform image2D jump_flood_image;
+layout(rgba16f, set = 0, binding = 4) uniform image2D output_image;
 
 // Our push constant.
 // Must be aligned to 16 bytes, just like the push constant we passed from the script.
@@ -46,7 +47,7 @@ vec3 get_extraction(vec2 uv) {
 }
 
 vec2 get_seed(ivec2 uv) {
-    return imageLoad(output_image, uv).rg;
+    return imageLoad(jump_flood_image, uv).rg;
 }
 
 vec2 get_closest_seed(ivec2 uv, ivec2 size) {
@@ -85,20 +86,24 @@ void main() {
         return;
     }
 
+    vec2 uv_norm = vec2(uv) / size;
+    vec3 extraction_sample = get_extraction(uv_norm);
+
     vec2 closest_seed_sample = get_seed(uv);
     float css_distance_sqr = closest_seed_sample == vec2(-1.0) ?
         10000000 : distance_sqr(uv, closest_seed_sample);
     
     vec4 color = vec4(closest_seed_sample, 0.0, 1.0);
 
-    if(params.pass == 0.0) {
-        vec2 uv_norm = vec2(uv) / size;
-        vec3 extraction_sample = get_extraction(uv_norm);
+    float pass = params.pass;
+    // Pass 0: Initial Seed
+    if(pass == 0.0) {
         if(length(extraction_sample) > 0.0) {
             color.xy = uv;
         }
     }
-    else if(params.pass == 1.0) {
+    // Pass 1 & 4: Jump Flood
+    else if(pass == 1.0 || pass == 4.0) {
         vec2 closest_seed = get_closest_seed(uv, size);
         if(closest_seed != vec2(-1.0)) {
             float cs_distance_sqr = distance_sqr(uv, closest_seed);
@@ -108,12 +113,29 @@ void main() {
             }
         }
     }
-    else {
+    // Pass 2: Store Result
+    else if(pass == 2.0) {
         float dist = sqrt(css_distance_sqr);
         color.rgb = vec3(dist);
     }
+    // Pass 3: Inverse Seed
+    else if(pass == 3.0) {
+        if(length(extraction_sample) == 0.0) {
+            color.xy = uv;
+        }
+    }
+    // Pass 5: Store Inverse Result
+    else if(pass == 5.0) {
+        float dist = sqrt(css_distance_sqr);
+        color.rgb = vec3(-dist);
+    }
 
-    imageStore(output_image, uv, color);
+    if(pass == 2.0 || (pass == 5.0 && color.r < 0.0)) {
+        imageStore(output_image, uv, color);
+    } else {
+        imageStore(jump_flood_image, uv, color);
+    }
+
     if(params.debug == 1.0) {
         imageStore(color_image, uv, color / vec4(vec3(1000.0), 1.0));
     }

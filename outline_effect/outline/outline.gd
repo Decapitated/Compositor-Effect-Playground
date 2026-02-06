@@ -3,7 +3,8 @@ class_name OutlineEffect extends CompositorEffect
 
 @export var jump_flood_effect: JumpFloodEffect
 
-@export_range(1, 10, 1, "or_greater") var line_width: int = 1
+@export_range(0, 10, 1, "or_greater") var outside_width: int = 0
+@export_range(0, 10, 1, "or_greater") var inside_width: int = 10
 @export var line_color: Color = Color.BLACK
 
 var _rd: RenderingDevice = null
@@ -36,8 +37,6 @@ func _notification(what: int) -> void:
     if what == NOTIFICATION_PREDELETE:
         if _shader.is_valid():
             _rd.free_rid(_shader)
-        if _pipeline.is_valid():
-            _rd.free_rid(_pipeline)
         if _linear_sampler.is_valid():
             _rd.free_rid(_linear_sampler)
 
@@ -79,13 +78,15 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var z_groups: int = 1
 
     var push_constant := PackedFloat32Array([
-        size.x, size.y, # Raster Size                  (8) (8)
-        0.0,            # View                         (4) (12)
-        line_width,     # Width                        (4) (16)
-        line_color.r,   # Color                        (16)(16)
+        size.x, size.y,      # Raster Size                  (8) (8)
+        0.0,                 # View                         (4) (12)
+        outside_width,       # Outisde Width                (4) (16)
+        line_color.r,        # Color                        (16)(16)
         line_color.g,
         line_color.b,
-        line_color.a,   
+        line_color.a,
+        float(inside_width), # Inside Width                 (4) (4)
+        0.0, 0.0, 0.0,       # Padding                      (12)(16)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    
@@ -151,18 +152,16 @@ func _get_shader_code() -> String:
     return shader_code
 
 func _build_shader(shader_code: String) -> RID:
-    print("Building outline _shader...")
+    print("Building outline shader...")
     var shader_source := RDShaderSource.new()
     shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
     shader_source.source_compute = shader_code
 
-    print("Compiling spirv...")
     var shader_spirv: RDShaderSPIRV = _rd.shader_compile_spirv_from_source(shader_source)
     if shader_spirv.compile_error_compute != "":
         push_error(shader_spirv.compile_error_compute)
         return RID()
     
-    print("Creating _shader...")
     var new_shader := _rd.shader_create_from_spirv(shader_spirv)
     if not new_shader.is_valid():
         push_error("Shader is invalid")

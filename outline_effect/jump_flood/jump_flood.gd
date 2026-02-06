@@ -14,7 +14,8 @@ var _pipeline: RID
 var _linear_sampler: RID
 
 var _texture_format: RDTextureFormat = RDTextureFormat.new()
-var _texture: RID
+var _jump_flood_texture: RID
+var _output_texture: RID
 var output_texture: Texture2DRD = Texture2DRD.new()
 
 var _cache_shader_code := ""
@@ -41,12 +42,12 @@ func _notification(what: int) -> void:
     if what == NOTIFICATION_PREDELETE:
         if _shader.is_valid():
             _rd.free_rid(_shader)
-        if _pipeline.is_valid():
-            _rd.free_rid(_pipeline)
         if _linear_sampler.is_valid():
             _rd.free_rid(_linear_sampler)
-        if _texture.is_valid():
-            _rd.free_rid(_texture)
+        if _jump_flood_texture.is_valid():
+            _rd.free_rid(_jump_flood_texture)
+        if _output_texture.is_valid():
+            _rd.free_rid(_output_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
     if extraction_effect == null:
@@ -78,10 +79,10 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var size: Vector2i = scene_buffers.get_internal_size()
     if size.x == 0 && size.y == 0:
         return
-
-    if !_texture.is_valid() || \
+    
+    if !_output_texture.is_valid() || !_jump_flood_texture.is_valid() || \
             _texture_format.width != size.x || _texture_format.height != size.y:
-        _create_output_texture(size.x, size.y)
+        _create_textures(size.x, size.y)
 
     @warning_ignore("integer_division")
     var x_groups: int = (size.x - 1) / 16 + 1
@@ -102,8 +103,6 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     # Run compute for each view.    
     var view_count: int = scene_buffers.get_view_count()
     for view in view_count:
-        _rd.texture_clear(_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
-        
         # Set view.
         push_constant[2] = view
 
@@ -133,46 +132,54 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         extraction_uniform.binding = 2
         extraction_uniform.add_id(_linear_sampler)
         extraction_uniform.add_id(extraction_effect.output_texture.texture_rd_rid)
+        # Jump Flood Image
+        var jump_flood_uniform := RDUniform.new()
+        jump_flood_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+        jump_flood_uniform.binding = 3
+        jump_flood_uniform.add_id(_jump_flood_texture)
         # Output Image
         var output_uniform := RDUniform.new()
         output_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
-        output_uniform.binding = 3
-        output_uniform.add_id(_texture)
+        output_uniform.binding = 4
+        output_uniform.add_id(_output_texture)
         #endregion
 
-        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, output_uniform])
+        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, jump_flood_uniform, output_uniform])
 
+        #region Run pass 0 (Seed)
+        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        push_constant[6] = 0.0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
+        #region Run pass 1 (Outside JFA)
+        push_constant[6] = 1.0
         var current_offset: float = distance
         while current_offset >= 1.0:
-            # Set offset.
             push_constant[4] = current_offset
-
-            # Run compute _shader.
-            var jfa_compute_list: int = _rd.compute_list_begin()
-            _rd.compute_list_bind_compute_pipeline(jfa_compute_list, _pipeline)
-            _rd.compute_list_bind_uniform_set(jfa_compute_list, uniform_set_0, 0)
-            var jfa_push_constant_bytes := push_constant.to_byte_array()
-            _rd.compute_list_set_push_constant(jfa_compute_list, jfa_push_constant_bytes, jfa_push_constant_bytes.size())
-            _rd.compute_list_dispatch(jfa_compute_list, x_groups, y_groups, z_groups)
-            _rd.compute_list_end()
-
-            # If first pass (Seed Pass), set pass mode to 1. (JFA Pass)
-            if push_constant[6] == 0.0:
-                push_constant[6] = 1.0
-            else:
-                # Update offset for next pass.
-                current_offset /= 2.0
-        
-        # Set pass mode to 2. (Last Pass)
+            _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+            current_offset /= 2.0
+        #endregion
+        #region Run pass 2 (Store Outside)
         push_constant[6] = 2.0
-        # Run compute _shader for last pass.
-        var compute_list: int = _rd.compute_list_begin()
-        _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
-        _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
-        var push_constant_bytes := push_constant.to_byte_array()
-        _rd.compute_list_set_push_constant(compute_list, push_constant_bytes, push_constant_bytes.size())
-        _rd.compute_list_dispatch(compute_list, x_groups, y_groups, z_groups)
-        _rd.compute_list_end()
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
+        #region Run pass 3 (Inverse Seed)
+        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        push_constant[6] = 3.0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
+        #region Run pass 4 (Inside JFA)
+        push_constant[6] = 4.0
+        current_offset = distance
+        while current_offset >= 1.0:
+            push_constant[4] = current_offset
+            _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+            current_offset /= 2.0
+        #endregion
+        #region Run pass 5 (Store Inside)
+        push_constant[6] = 5.0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
 
 #region Shader
 func _check_shader() -> void:
@@ -192,18 +199,16 @@ func _get_shader_code() -> String:
     return shader_code
 
 func _build_shader(shader_code: String) -> RID:
-    print("Building extraction _shader...")
+    print("Building jump flood shader...")
     var shader_source := RDShaderSource.new()
     shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
     shader_source.source_compute = shader_code
 
-    print("Compiling spirv...")
     var shader_spirv: RDShaderSPIRV = _rd.shader_compile_spirv_from_source(shader_source)
     if shader_spirv.compile_error_compute != "":
         push_error(shader_spirv.compile_error_compute)
         return RID()
     
-    print("Creating _shader...")
     var new_shader := _rd.shader_create_from_spirv(shader_spirv)
     if not new_shader.is_valid():
         push_error("Shader is invalid")
@@ -212,7 +217,7 @@ func _build_shader(shader_code: String) -> RID:
     return new_shader
 #endregion
 
-func _create_output_texture(width: int, height: int) -> void:
+func _create_textures(width: int, height: int) -> void:
     _texture_format = RDTextureFormat.new()
     _texture_format.width = width
     _texture_format.height = height
@@ -224,9 +229,24 @@ func _create_output_texture(width: int, height: int) -> void:
         RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
         RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT # Allows us to clear the texture.
 
-    var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
-    output_texture.texture_rd_rid = new_texture
+    # Create Jump Flood Texture
+    var new_jump_flood_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    if _jump_flood_texture.is_valid():
+        _rd.free_rid(_jump_flood_texture)
+    _jump_flood_texture = new_jump_flood_texture
 
-    if _texture.is_valid():
-        _rd.free_rid(_texture)
-    _texture = new_texture
+    # Create Output Texture
+    var new_output_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    output_texture.texture_rd_rid = new_output_texture
+    if _output_texture.is_valid():
+        _rd.free_rid(_output_texture)
+    _output_texture = new_output_texture
+
+func _run_compute(uniform_set_0: RID, push_constant: PackedFloat32Array, x_groups: int, y_groups: int, z_groups: int) -> void:
+    var compute_list: int = _rd.compute_list_begin()
+    _rd.compute_list_bind_compute_pipeline(compute_list, _pipeline)
+    _rd.compute_list_bind_uniform_set(compute_list, uniform_set_0, 0)
+    var push_constant_bytes := push_constant.to_byte_array()
+    _rd.compute_list_set_push_constant(compute_list, push_constant_bytes, push_constant_bytes.size())
+    _rd.compute_list_dispatch(compute_list, x_groups, y_groups, z_groups)
+    _rd.compute_list_end()

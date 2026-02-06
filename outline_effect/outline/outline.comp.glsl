@@ -27,8 +27,9 @@ layout(set = 0, binding = 2) uniform sampler2D jump_flood_texture;
 layout(push_constant, std430) uniform Params {
     vec2 raster_size;
     float view;
-    float line_width;
+    float outside_width;
     vec4 line_color;
+    float inside_width;
 }
 params;
 
@@ -54,7 +55,8 @@ void main() {
     vec4 color = imageLoad(color_image, uv);
 
     vec4 line_color = params.line_color;
-    float edge = 1.0 - clamp(ceil(distance_sample - params.line_width), 0.0, 1.0);
+    // float edge = 1.0 - clamp(ceil(abs(distance_sample) - params.outside_width), 0.0, 1.0);
+    float edge = -params.inside_width < distance_sample && distance_sample < params.outside_width ? 1.0 : 0.0;
 
     color.rgb = mix(color.rgb, line_color.rgb, line_color.a * edge);
 
