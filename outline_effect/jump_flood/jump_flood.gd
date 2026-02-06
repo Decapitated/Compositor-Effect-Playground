@@ -103,8 +103,6 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     # Run compute for each view.    
     var view_count: int = scene_buffers.get_view_count()
     for view in view_count:
-        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
-        
         # Set view.
         push_constant[2] = view
 
@@ -148,25 +146,40 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
 
         var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, jump_flood_uniform, output_uniform])
 
+        #region Run pass 0 (Seed)
+        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        push_constant[6] = 0.0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
+        #region Run pass 1 (Outside JFA)
+        push_constant[6] = 1.0
         var current_offset: float = distance
         while current_offset >= 1.0:
-            # Set offset.
             push_constant[4] = current_offset
-
-            # Run compute _shader.
             _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
-
-            # If first pass (Seed Pass), set pass mode to 1. (JFA Pass)
-            if push_constant[6] == 0.0:
-                push_constant[6] = 1.0
-            else:
-                # Update offset for next pass.
-                current_offset /= 2.0
-        
-        # Set pass mode to 2. (Last Pass)
+            current_offset /= 2.0
+        #endregion
+        #region Run pass 2 (Store Outside)
         push_constant[6] = 2.0
-        # Run compute _shader for last pass.
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
+        #region Run pass 3 (Inverse Seed)
+        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        push_constant[6] = 3.0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
+        #region Run pass 4 (Inside JFA)
+        push_constant[6] = 4.0
+        current_offset = distance
+        while current_offset >= 1.0:
+            push_constant[4] = current_offset
+            _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+            current_offset /= 2.0
+        #endregion
+        #region Run pass 5 (Store Inside)
+        push_constant[6] = 5.0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+        #endregion
 
 #region Shader
 func _check_shader() -> void:

@@ -86,20 +86,24 @@ void main() {
         return;
     }
 
+    vec2 uv_norm = vec2(uv) / size;
+    vec3 extraction_sample = get_extraction(uv_norm);
+
     vec2 closest_seed_sample = get_seed(uv);
     float css_distance_sqr = closest_seed_sample == vec2(-1.0) ?
         10000000 : distance_sqr(uv, closest_seed_sample);
     
     vec4 color = vec4(closest_seed_sample, 0.0, 1.0);
 
-    if(params.pass == 0.0) {
-        vec2 uv_norm = vec2(uv) / size;
-        vec3 extraction_sample = get_extraction(uv_norm);
+    float pass = params.pass;
+    // Pass 0: Initial Seed
+    if(pass == 0.0) {
         if(length(extraction_sample) > 0.0) {
             color.xy = uv;
         }
     }
-    else if(params.pass == 1.0) {
+    // Pass 1 & 4: Jump Flood
+    else if(pass == 1.0 || pass == 4.0) {
         vec2 closest_seed = get_closest_seed(uv, size);
         if(closest_seed != vec2(-1.0)) {
             float cs_distance_sqr = distance_sqr(uv, closest_seed);
@@ -109,12 +113,24 @@ void main() {
             }
         }
     }
-    else {
+    // Pass 2: Store Result
+    else if(pass == 2.0) {
         float dist = sqrt(css_distance_sqr);
         color.rgb = vec3(dist);
     }
+    // Pass 3: Inverse Seed
+    else if(pass == 3.0) {
+        if(length(extraction_sample) == 0.0) {
+            color.xy = uv;
+        }
+    }
+    // Pass 5: Store Inverse Result
+    else if(pass == 5.0) {
+        float dist = sqrt(css_distance_sqr);
+        color.rgb = vec3(-dist);
+    }
 
-    if(params.pass == 2.0) {
+    if(pass == 2.0 || (pass == 5.0 && color.r < 0.0)) {
         imageStore(output_image, uv, color);
     } else {
         imageStore(jump_flood_image, uv, color);
