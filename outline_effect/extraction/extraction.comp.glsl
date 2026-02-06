@@ -163,8 +163,8 @@ void main() {
     normal_sample = ceil(normal_sample - params.normal_threshold);
 
     vec3 samples = vec3(depth_sample, normal_sample, stencil_sample);
+    
     color = vec4(vec3(samples), 1.0);
-
 
     imageStore(output_image, uv, color);
     if(params.debug == 1.0) {

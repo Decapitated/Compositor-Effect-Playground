@@ -12,7 +12,7 @@ float fresnel(float amount, vec3 normal, vec3 view)
 
 void fragment() {
 	ALBEDO = texture(albedo_texture, UV + uv_offset).rgb;
-	NORMAL_MAP = texture(normal_texture, UV + uv_offset).xyz;
+	//NORMAL_MAP = texture(normal_texture, UV + uv_offset).xyz;
 	EMISSION = mix(vec3(1.0), ALBEDO, 0.75) * clamp(smoothstep(0.6, 0.7, fresnel(1.0, NORMAL, VIEW)) * NORMAL.y, 0.0, 1.0) * 2.0;
 	ROUGHNESS = 0.7;
 	SPECULAR = 0.8;
