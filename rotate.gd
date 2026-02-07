@@ -1,4 +1,4 @@
-extends MeshInstance3D
+extends Node3D
 
 @export_range(1.0, 10.0, 0.1, "or_greater") var duration := 5.0
 

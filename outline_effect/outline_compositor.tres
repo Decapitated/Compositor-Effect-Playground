@@ -1,0 +1,58 @@
+[gd_resource type="Compositor" format=3 uid="uid://bnen4hr4ibjrx"]
+
+[ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://outline_effect/stencil/stencil.gd" id="1_yqmet"]
+[ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://outline_effect/extraction/extraction.gd" id="2_e276i"]
+[ext_resource type="Script" uid="uid://crv10gdfdqjmm" path="res://outline_effect/jump_flood/jump_flood.gd" id="3_s58xd"]
+[ext_resource type="Script" uid="uid://uauh2w1q8ntw" path="res://outline_effect/outline/outline.gd" id="4_d8u2q"]
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_vsri0"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("1_yqmet")
+metadata/_custom_type_script = "uid://jxepgw1atqhk"
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_awg7p"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("2_e276i")
+stencil_effect = SubResource("CompositorEffect_vsri0")
+depth_threshold = 0.035
+normal_threshold = 0.25
+metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_gbl11"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("3_s58xd")
+extraction_effect = SubResource("CompositorEffect_awg7p")
+distance = 366
+metadata/_custom_type_script = "uid://crv10gdfdqjmm"
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_ktpcq"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("4_d8u2q")
+jump_flood_effect = SubResource("CompositorEffect_gbl11")
+outside_width = 2
+inside_width = 3
+line_color = Color(0, 0, 18.892157, 1)
+metadata/_custom_type_script = "uid://uauh2w1q8ntw"
+
+[resource]
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri0"), SubResource("CompositorEffect_awg7p"), SubResource("CompositorEffect_gbl11"), SubResource("CompositorEffect_ktpcq")])
