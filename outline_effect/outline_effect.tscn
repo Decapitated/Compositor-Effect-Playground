@@ -63,19 +63,17 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("4_s72gf")
 extraction_effect = SubResource("CompositorEffect_awg7p")
-debug = true
 metadata/_custom_type_script = "uid://crv10gdfdqjmm"
 
 [sub_resource type="CompositorEffect" id="CompositorEffect_ktpcq"]
 resource_local_to_scene = false
 resource_name = ""
-enabled = false
+enabled = true
 effect_callback_type = 4
 needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("5_vsri0")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
-outside_width = 1
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [sub_resource type="Compositor" id="Compositor_awg7p"]

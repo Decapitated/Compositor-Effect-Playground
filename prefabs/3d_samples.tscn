@@ -228,7 +228,7 @@ material_overlay = SubResource("ShaderMaterial_s72gf")
 mesh = SubResource("BoxMesh_4x1ri")
 
 [node name="Cube2" type="MeshInstance3D" parent="." unique_id=1043859046]
-transform = Transform3D(0.8279601, 0.16955613, -0.5345397, 0.06421117, 0.9182623, 0.390731, 0.55709887, -0.3578331, 0.74939704, -1.88, 1.545, 0.975)
+transform = Transform3D(1, 0, 0, 0, 0.9999997, 0, 0, 0, 0.99999964, -1.88, 1.545, 0.975)
 material_override = SubResource("ShaderMaterial_xw6jf")
 material_overlay = SubResource("ShaderMaterial_s72gf")
 mesh = SubResource("BoxMesh_p060g")

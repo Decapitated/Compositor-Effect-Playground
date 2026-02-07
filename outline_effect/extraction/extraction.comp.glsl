@@ -24,8 +24,6 @@ layout(set = 0, binding = 4) uniform sampler2D stencil_texture;
 
 layout(rgba16f, set = 0, binding = 5) uniform image2D output_image;
 
-// Our push constant.
-// Must be aligned to 16 bytes, just like the push constant we passed from the script.
 layout(push_constant, std430) uniform Params {
     vec2 raster_size;
     float view;
@@ -147,27 +145,43 @@ void main() {
 
     vec2 uv_norm = vec2(uv) / params.raster_size;
 
-    vec4 color = imageLoad(color_image, uv);
+    vec4 color = vec4(vec3(0.0), 1.0);
     vec4 normal = get_normal(uv_norm);
     float stencil = get_stencil(uv_norm);
+
+    vec2 texel_size = scene_data_block.data.screen_pixel_size;
     
-    float depth_sample = stencil == 0.0 ? 0.0 : sample_depth(uv_norm, scene_data_block.data.screen_pixel_size);
-    float normal_sample = stencil == 0.0 ? 0.0 : sample_normal(uv_norm, scene_data_block.data.screen_pixel_size);
-    float stencil_sample = sample_stencil(uv_norm, scene_data_block.data.screen_pixel_size);
+    float depth_sample = stencil == 0.0 ? 0.0 : sample_depth(uv_norm, texel_size);
+    float normal_sample = stencil == 0.0 ? 0.0 : sample_normal(uv_norm, texel_size);
+    float stencil_sample = sample_stencil(uv_norm, texel_size);
 
     float normal_mask = ceil(normal_sample - 0.001);
 
-    depth_sample = depth_sample * normal_mask;
+    vec2 ndc = uv_norm * 2.0 - 1.0;
+    ndc.y = -ndc.y;
+
+    vec4 view_pos = scene_data_block.data.inv_projection_matrix * vec4(ndc, -1.0, 1.0);
+    vec3 view_dir = normalize(view_pos.xyz); 
+
+    float NdotV = dot(-view_dir, normal.xyz * 2.0 - 1.0);
+    NdotV = NdotV * 0.5 + 0.5;
+    NdotV = 1.0 - NdotV;
+    NdotV = 1.0 - ceil(NdotV - 0.15);
+
+    float depth_modulate = sqrt(pow(NdotV, 2) + pow(normal_mask, 2));
+
+    depth_sample = depth_sample * depth_modulate;
     depth_sample = ceil(depth_sample - params.depth_threshold);
 
     normal_sample = ceil(normal_sample - params.normal_threshold);
 
     vec3 samples = vec3(depth_sample, normal_sample, stencil_sample);
     
-    color = vec4(vec3(samples), 1.0);
+    color.rgb = samples;
 
     imageStore(output_image, uv, color);
     if(params.debug == 1.0) {
+        // color.rgb = vec3(NdotV);
         imageStore(color_image, uv, color);
     }
 }
