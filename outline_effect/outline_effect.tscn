@@ -2,21 +2,10 @@
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
 [ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://outline_effect/stencil/stencil.gd" id="2_s72gf"]
+[ext_resource type="Script" uid="uid://dvsmwljbx0uwp" path="res://rotate.gd" id="2_vsri0"]
 [ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://outline_effect/extraction/extraction.gd" id="3_vxeov"]
 [ext_resource type="Script" uid="uid://crv10gdfdqjmm" path="res://outline_effect/jump_flood/jump_flood.gd" id="4_s72gf"]
 [ext_resource type="Script" uid="uid://uauh2w1q8ntw" path="res://outline_effect/outline/outline.gd" id="5_vsri0"]
-
-[sub_resource type="GDScript" id="GDScript_s72gf"]
-script/source = "extends MeshInstance3D
-
-@export_range(1.0, 10.0, 0.1, \"or_greater\") var duration := 5.0
-
-func _ready() -> void:
-	var tween := create_tween()
-	tween.tween_property(self, \"rotation:y\", 180.0, duration / 2.0)
-	tween.tween_property(self, \"rotation:y\", 360.0, duration / 2.0)
-	tween.set_loops()
-"
 
 [sub_resource type="GDScript" id="GDScript_kf30h"]
 script/source = "extends Node3D
@@ -51,6 +40,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("3_vxeov")
 stencil_effect = SubResource("CompositorEffect_vsri0")
+depth_threshold = 0.035
 normal_threshold = 0.25
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
 
@@ -63,19 +53,18 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("4_s72gf")
 extraction_effect = SubResource("CompositorEffect_awg7p")
-debug = true
 metadata/_custom_type_script = "uid://crv10gdfdqjmm"
 
 [sub_resource type="CompositorEffect" id="CompositorEffect_ktpcq"]
 resource_local_to_scene = false
 resource_name = ""
-enabled = false
+enabled = true
 effect_callback_type = 4
 needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("5_vsri0")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
-outside_width = 1
+line_color = Color(4.415934, 4.415934, 4.415934, 1)
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [sub_resource type="Compositor" id="Compositor_awg7p"]
@@ -86,16 +75,30 @@ compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
 [node name="DirectionalLight3D" parent="3D Samples/WorldEnvironment" parent_id_path=PackedInt32Array(1926476177, 793794692) index="0" unique_id=935803027]
-transform = Transform3D(0.92387944, 0.19134173, -0.33141357, 0, 0.8660254, 0.49999997, 0.38268343, -0.46193975, 0.80010307, 0, 0, 0)
+transform = Transform3D(0.7071067, 0.35355338, -0.61237234, 0, 0.8660254, 0.49999994, 0.7071067, -0.35355338, 0.61237234, 0, 0, 0)
 shadow_enabled = true
 
 [node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]
-transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 0.9999999, 0, 0, 0)
-script = SubResource("GDScript_s72gf")
+transform = Transform3D(-4.3711385e-08, 0, 0.9999999, 0, 1, 0, -0.9999999, 0, -4.3711385e-08, 0, 0, 0)
+script = ExtResource("2_vsri0")
 duration = 1000.0
 
+[node name="Cube" parent="3D Samples" index="3" unique_id=220645440]
+script = ExtResource("2_vsri0")
+
 [node name="Cube2" parent="3D Samples" index="4" unique_id=1043859046]
-transform = Transform3D(1, 0, 0, 0, 0.9999997, 0, 0, 0, 0.99999964, -1.41, 1.72, 1.63)
+transform = Transform3D(0.99999994, 0, 0, 0, 0.99999964, 0, 0, 0, 0.99999964, -1.41, 1.72, 1.05)
+script = ExtResource("2_vsri0")
+
+[node name="Sphere" parent="3D Samples" index="5" unique_id=501850454]
+script = ExtResource("2_vsri0")
+
+[node name="Cyllinder" parent="3D Samples" index="6" unique_id=1594716006]
+transform = Transform3D(0.8079899, -0.55006206, -0.2111491, 0, 0.35836795, -0.9335804, 0.5891963, 0.7543235, 0.2895577, 4, 1, 1)
+script = ExtResource("2_vsri0")
+
+[node name="Torus" parent="3D Samples" index="7" unique_id=2140150426]
+script = ExtResource("2_vsri0")
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)

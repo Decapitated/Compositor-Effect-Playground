@@ -96,7 +96,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         float(scale),                 # Scale                        (4) (4)
         depth_threshold,              # Depth Theshold               (4) (8)
         normal_threshold,             # Normal Threshold             (4) (12)
-        0.0,                          # Padding                     (4) (16)
+        0.0,                          # Padding                      (4) (16)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    
