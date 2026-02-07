@@ -176,7 +176,6 @@ func _build_shader(shader_code: String) -> RID:
     if shader_spirv.compile_error_compute != "":
         push_error(shader_spirv.compile_error_compute)
         return RID()
-    # var shader_spirv := outline_shader.get_spirv()
     
     var new_shader := _rd.shader_create_from_spirv(shader_spirv)
     if not new_shader.is_valid():
