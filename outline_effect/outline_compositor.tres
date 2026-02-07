@@ -37,7 +37,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("3_s58xd")
 extraction_effect = SubResource("CompositorEffect_awg7p")
-distance = 366
+distance = 355
 metadata/_custom_type_script = "uid://crv10gdfdqjmm"
 
 [sub_resource type="CompositorEffect" id="CompositorEffect_ktpcq"]
@@ -49,9 +49,8 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("4_d8u2q")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
-outside_width = 2
-inside_width = 3
-line_color = Color(0, 0, 18.892157, 1)
+outside_width = 1
+line_color = Color(4.8672786, 4.8672786, 4.8672786, 1)
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [resource]
