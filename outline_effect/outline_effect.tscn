@@ -40,7 +40,6 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("3_vxeov")
 stencil_effect = SubResource("CompositorEffect_vsri0")
-depth_threshold = 0.033
 normal_threshold = 0.25
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
 
@@ -64,6 +63,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("5_vsri0")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
+line_color = Color(4.415934, 4.415934, 4.415934, 1)
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [sub_resource type="Compositor" id="Compositor_awg7p"]
@@ -74,7 +74,7 @@ compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
 [node name="DirectionalLight3D" parent="3D Samples/WorldEnvironment" parent_id_path=PackedInt32Array(1926476177, 793794692) index="0" unique_id=935803027]
-transform = Transform3D(0.92387944, 0.19134173, -0.33141357, 0, 0.8660254, 0.49999997, 0.38268343, -0.46193975, 0.80010307, 0, 0, 0)
+transform = Transform3D(0.7071067, 0.35355338, -0.61237234, 0, 0.8660254, 0.49999994, 0.7071067, -0.35355338, 0.61237234, 0, 0, 0)
 shadow_enabled = true
 
 [node name="GodotPlush" parent="3D Samples" index="2" unique_id=697354579]

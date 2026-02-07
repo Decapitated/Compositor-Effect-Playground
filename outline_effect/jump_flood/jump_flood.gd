@@ -151,7 +151,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         push_constant[6] = 0.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
         #endregion
-        #region Run pass 1 (Outside JFA)
+        #region Run pass 1 (Outside Jump Flood)
         push_constant[6] = 1.0
         var current_offset: float = distance
         while current_offset >= 1.0:
@@ -168,7 +168,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         push_constant[6] = 3.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
         #endregion
-        #region Run pass 4 (Inside JFA)
+        #region Run pass 4 (Inside Jump Flood)
         push_constant[6] = 4.0
         current_offset = distance
         while current_offset >= 1.0:
