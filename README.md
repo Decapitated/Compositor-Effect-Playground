@@ -22,3 +22,4 @@ A long time goal of mine has been to implement outlines via depth & normal data.
 | [Scene Data Include](https://github.com/godotengine/godot/blob/master/servers/rendering/renderer_rd/shaders/scene_data_inc.glsl) |
 | [Include Scene Data Virtually](https://github.com/godotengine/godot/blob/98782b6c8c9cabe0fb7c80bc62640735ecb076d3/servers/rendering/renderer_rd/renderer_scene_render_rd.cpp#L1679C6-L1679C7) |
 | [Compute Shader Textures](https://nekotoarts.github.io/blog/Compute-Shader-Textures) |
+| [Stencil Buffer Texture](https://github.com/dmlary/godot-demo-sencil-buffer-compositor-effect) |
