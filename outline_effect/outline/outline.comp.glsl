@@ -4,10 +4,17 @@
 
 #define PI 3.14159265359
 
+// #define NOISE
+
 // Provided by godot "virtually".
 // https://github.com/godotengine/godot/blob/98782b6c8c9cabe0fb7c80bc62640735ecb076d3/servers/rendering/renderer_rd/renderer_scene_render_rd.cpp#L1679C6-L1679C7
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
 #include "godot/scene_data_inc.glsl"
+
+// Included by compositor effect.
+#ifdef NOISE
+#[FastNoiseLite]
+#endif
 
 // Invocations in the (x, y, z) dimension.
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
@@ -67,6 +74,21 @@ void main() {
     float inside_edge = float(inside_width > 0.0 && distance_sample <= -inside_offset && distance_sample >= -inside_offset - inside_width);
 
     vec4 line_color = mix(params.outside_line_color, params.inside_line_color, inside_edge);
+
+    #ifdef NOISE
+    fnl_state noise_state = fnlCreateState(0);
+    noise_state.noise_type = FNL_NOISE_OPENSIMPLEX2;
+    noise_state.fractal_type = FNL_FRACTAL_FBM;
+	noise_state.octaves = 8;
+	noise_state.lacunarity = 4.f;
+	noise_state.gain = .75f;
+    noise_state.frequency = 0.01;
+
+    float noise = fnlGetNoise2D(noise_state, uv.x, uv.y) * 0.5 + 0.5;
+    noise = ceil(noise - 0.5);
+    outside_edge *= noise;
+    inside_edge *= noise;
+    #endif
 
     color.rgb = mix(color.rgb, line_color.rgb, line_color.a * max(outside_edge, inside_edge));
 

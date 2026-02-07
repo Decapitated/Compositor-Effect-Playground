@@ -1,6 +1,9 @@
 @tool
 class_name OutlineEffect extends CompositorEffect
 
+const SHADER_PATH := "res://outline_effect/outline/outline.comp.glsl"
+const FAST_NOISE_LITE_PATH := "res://outline_effect/outline/FastNoiseLite.glsl"
+
 @export var jump_flood_effect: JumpFloodEffect
 
 @export_range(0, 10, 1, "or_greater") var outside_width: int = 2
@@ -156,8 +159,11 @@ func _check_shader() -> void:
             _pipeline = _rd.compute_pipeline_create(_shader)
 
 func _get_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/outline/outline.comp.glsl")
+    var shader_code: String = FileAccess.get_file_as_string(SHADER_PATH)
     assert(!shader_code.is_empty(), "Shader code is empty")
+    var fast_noise_code: String = FileAccess.get_file_as_string(FAST_NOISE_LITE_PATH)
+    assert(!fast_noise_code.is_empty(), str(FileAccess.get_open_error()))
+    shader_code = shader_code.replace("#[FastNoiseLite]", fast_noise_code)
     return shader_code
 
 func _build_shader(shader_code: String) -> RID:
@@ -170,6 +176,7 @@ func _build_shader(shader_code: String) -> RID:
     if shader_spirv.compile_error_compute != "":
         push_error(shader_spirv.compile_error_compute)
         return RID()
+    # var shader_spirv := outline_shader.get_spirv()
     
     var new_shader := _rd.shader_create_from_spirv(shader_spirv)
     if not new_shader.is_valid():
