@@ -50,10 +50,8 @@ script = ExtResource("2_vsri0")
 script = ExtResource("2_vsri0")
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]
-process_mode = 4
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
 script = SubResource("GDScript_kf30h")
-duration = 2.0
 
 [node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=2045132986]
 transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.96592575, 0, 3, 0)
