@@ -148,6 +148,8 @@ void main() {
     vec4 color = vec4(vec3(0.0), 1.0);
     vec4 normal = get_normal(uv_norm);
     float stencil = get_stencil(uv_norm);
+    float depth_mask = saturate(get_linear_depth(uv_norm) / 10.0);
+    depth_mask = 1.0 - floor(depth_mask);
 
     vec2 texel_size = scene_data_block.data.screen_pixel_size;
     
@@ -166,22 +168,25 @@ void main() {
     float NdotV = dot(-view_dir, normal.xyz * 2.0 - 1.0);
     NdotV = NdotV * 0.5 + 0.5;
     NdotV = 1.0 - NdotV;
-    NdotV = 1.0 - ceil(NdotV - 0.15);
+    NdotV = 1.0 - ceil(NdotV - 0.1);
 
-    float depth_modulate = sqrt(pow(NdotV, 2) + pow(normal_mask, 2));
+    float depth_modulate = sqrt(pow(NdotV, 2) + pow(normal_mask, 2)) * get_depth(uv_norm)*100.0;
 
     depth_sample = depth_sample * depth_modulate;
     depth_sample = ceil(depth_sample - params.depth_threshold);
+    depth_sample = saturate(depth_sample);
 
+    normal_sample *= depth_modulate;
     normal_sample = ceil(normal_sample - params.normal_threshold);
+    normal_sample = saturate(normal_sample);
 
-    vec3 samples = vec3(depth_sample, normal_sample, stencil_sample);
-    
+    vec3 samples = vec3(depth_sample * depth_mask, normal_sample * depth_mask, stencil_sample);
+
     color.rgb = samples;
 
     imageStore(output_image, uv, color);
     if(params.debug == 1.0) {
-        // color.rgb = vec3(NdotV);
+        // color.rgb = vec3(depth_modulate);
         imageStore(color_image, uv, color);
     }
 }
