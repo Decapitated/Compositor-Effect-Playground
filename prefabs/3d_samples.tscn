@@ -1,11 +1,11 @@
 [gd_scene format=4 uid="uid://cbuobna264clf"]
 
-[ext_resource type="Environment" uid="uid://bfjush7w8wub" path="res://world_environment.tres" id="1_7r2si"]
-[ext_resource type="Shader" uid="uid://b6ddxyv68vt61" path="res://grid.gdshader" id="2_s5uh6"]
-[ext_resource type="Shader" uid="uid://ceap1cori15to" path="res://toon_shading.gdshader" id="3_uk8lx"]
-[ext_resource type="Shader" uid="uid://bx2im4keidef8" path="res://write_buffer.gdshader" id="4_s5uh6"]
+[ext_resource type="Environment" uid="uid://bfjush7w8wub" path="res://assets/world_environment.tres" id="1_7r2si"]
+[ext_resource type="Shader" uid="uid://b6ddxyv68vt61" path="res://assets/grid.gdshader" id="2_s5uh6"]
+[ext_resource type="Shader" uid="uid://ceap1cori15to" path="res://assets/toon_shading.gdshader" id="3_uk8lx"]
+[ext_resource type="Shader" uid="uid://bx2im4keidef8" path="res://assets/write_buffer.gdshader" id="4_s5uh6"]
 [ext_resource type="Texture2D" uid="uid://chptmk32p2njn" path="res://assets/godot_plush_model/godot_plush_albedo.png" id="4_xw6jf"]
-[ext_resource type="Texture2D" uid="uid://k6okhmvexu4f" path="res://toon_color_ramp.tres" id="5_p060g"]
+[ext_resource type="Texture2D" uid="uid://k6okhmvexu4f" path="res://assets/toon_color_ramp.tres" id="5_p060g"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_4x1ri"]
 render_priority = 0

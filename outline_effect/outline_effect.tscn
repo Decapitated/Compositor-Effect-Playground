@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dpiycjyqn5ovj"]
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
-[ext_resource type="Script" uid="uid://dvsmwljbx0uwp" path="res://rotate.gd" id="2_vsri0"]
+[ext_resource type="Script" uid="uid://dvsmwljbx0uwp" path="res://assets/rotate.gd" id="2_vsri0"]
 [ext_resource type="Compositor" uid="uid://bnen4hr4ibjrx" path="res://outline_effect/outline_compositor.tres" id="3_vxeov"]
 
 [sub_resource type="GDScript" id="GDScript_kf30h"]
