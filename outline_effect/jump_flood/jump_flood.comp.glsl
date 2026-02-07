@@ -132,11 +132,10 @@ void main() {
 
     if(pass == 2.0 || (pass == 5.0 && color.r < 0.0)) {
         imageStore(output_image, uv, color);
+        if(params.debug == 1.0) {
+            imageStore(color_image, uv, vec4(vec3(mod(color.r, 10.0) / 10.0), 1.0));
+        }
     } else {
         imageStore(jump_flood_image, uv, color);
-    }
-
-    if(params.debug == 1.0) {
-        imageStore(color_image, uv, color / vec4(vec3(1000.0), 1.0));
     }
 }
