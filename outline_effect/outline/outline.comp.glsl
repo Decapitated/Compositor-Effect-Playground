@@ -28,8 +28,11 @@ layout(push_constant, std430) uniform Params {
     vec2 raster_size;
     float view;
     float outside_width;
-    vec4 line_color;
+    vec4 outside_line_color;
     float inside_width;
+    float outside_offset;
+    float inside_offset;
+    vec4 inside_line_color;
 }
 params;
 
@@ -54,11 +57,18 @@ void main() {
 
     vec4 color = imageLoad(color_image, uv);
 
-    vec4 line_color = params.line_color;
-    // float edge = 1.0 - clamp(ceil(abs(distance_sample) - params.outside_width), 0.0, 1.0);
-    float edge = -params.inside_width < distance_sample && distance_sample < params.outside_width ? 1.0 : 0.0;
+    float outside_width = params.outside_width;
+    float outside_offset = params.outside_offset;
 
-    color.rgb = mix(color.rgb, line_color.rgb, line_color.a * edge);
+    float inside_width = params.inside_width;
+    float inside_offset = params.inside_offset;
+
+    float outside_edge = float(outside_width > 0.0 && distance_sample >= outside_offset && distance_sample <= outside_offset + outside_width);
+    float inside_edge = float(inside_width > 0.0 && distance_sample <= -inside_offset && distance_sample >= -inside_offset - inside_width);
+
+    vec4 line_color = mix(params.outside_line_color, params.inside_line_color, inside_edge);
+
+    color.rgb = mix(color.rgb, line_color.rgb, line_color.a * max(outside_edge, inside_edge));
 
     imageStore(color_image, uv, color);
 }
