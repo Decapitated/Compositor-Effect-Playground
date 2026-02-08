@@ -50,7 +50,7 @@ radius = 5.0
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c2n18"]
 transparency = 1
 shading_mode = 0
-albedo_color = Color(0, 0, 0, 0)
+albedo_color = Color(0, 0, 0, 1)
 stencil_mode = 3
 stencil_flags = 2
 stencil_reference = 123
@@ -87,7 +87,6 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("6_jb31b")
 extraction_effect = SubResource("CompositorEffect_fxe0t")
-distance = 41
 samples = 8
 metadata/_custom_type_script = "uid://crv10gdfdqjmm"
 
@@ -100,9 +99,8 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("7_wbpse")
 jump_flood_effect = SubResource("CompositorEffect_jb31b")
-outside_width = 0
-inside_width = 3
-inside_line_color = Color(0, 0, 1, 1)
+outside_line_color = Color(0, 0.14117648, 1, 1)
+inside_line_color = Color(0, 0.14117648, 1, 1)
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [sub_resource type="Compositor" id="Compositor_00yce"]
@@ -137,7 +135,7 @@ unique_name_in_owner = true
 material_override = SubResource("StandardMaterial3D_c2n18")
 
 [node name="CamStand" type="Node3D" parent="." unique_id=1476199415]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.545)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 
 [node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=552786362]
 transform = Transform3D(1, 0, 0, 0, 0.9999999, 0, 0, 0, 0.9999999, 0, 5, 0)
