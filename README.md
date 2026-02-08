@@ -5,6 +5,9 @@ A Godot project for playing around with compositor effects.
 
 ### "Wide" Outlines
 <img src="docs/wide_outlines.png">
+
+*Stencil → Extraction → Jump Flood → Outline*
+
 A long time goal of mine has been to implement outlines via depth & normal data. With Godot's compositor, I was finally able to fullfil that goal.
 
 #### References
