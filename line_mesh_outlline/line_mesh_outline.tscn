@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://cwcgeo8wa8h0d"]
+
+[ext_resource type="Script" uid="uid://b0pp2sqrujh5s" path="res://line_mesh_outlline/line_mesh_outline.gd" id="1_c2n18"]
+[ext_resource type="Environment" uid="uid://bfjush7w8wub" path="res://assets/world_environment.tres" id="1_ryrnd"]
+[ext_resource type="Shader" uid="uid://b6ddxyv68vt61" path="res://assets/grid.gdshader" id="2_o0mra"]
+[ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://outline_effect/stencil/stencil.gd" id="4_0u0d7"]
+[ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://outline_effect/extraction/extraction.gd" id="5_fxe0t"]
+[ext_resource type="Script" uid="uid://crv10gdfdqjmm" path="res://outline_effect/jump_flood/jump_flood.gd" id="6_jb31b"]
+[ext_resource type="Script" uid="uid://uauh2w1q8ntw" path="res://outline_effect/outline/outline.gd" id="7_wbpse"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_c2n18"]
+render_priority = 0
+shader = ExtResource("2_o0mra")
+shader_parameter/subdivisions = 32.0
+shader_parameter/grid_width = 0.02
+shader_parameter/background_color = Color(0.2, 0.2, 0.2, 1)
+shader_parameter/background_color_two = Color(0.1, 0.1, 0.1, 1)
+shader_parameter/grid_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/dashed_scale_x = 0.02
+shader_parameter/dashed_scale_y = 0.02
+shader_parameter/dashed_count_x = 1.0
+shader_parameter/dashed_count_y = 1.0
+shader_parameter/point_width = 0.021
+shader_parameter/point_color = Color(0, 0, 0, 1)
+shader_parameter/point_scale_x = 0.05
+shader_parameter/point_scale_y = 0.05
+shader_parameter/inside_width = 0.01
+shader_parameter/inside_subdivisions = 6.0
+shader_parameter/inside_color = Color(0.4, 0.4, 0.4, 1)
+shader_parameter/in_dashed_scale_x = 0.3
+shader_parameter/in_dashed_scale_y = 0.3
+shader_parameter/in_dashed_count_x = 6.0
+shader_parameter/in_dashed_count_y = 6.0
+shader_parameter/use_uv = false
+shader_parameter/world_triplanar = false
+shader_parameter/screen_triplanar = false
+shader_parameter/uv1_scale = Vector3(1, 1, 1)
+shader_parameter/uv1_offset = Vector3(0, 0, 0)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_fwqmn"]
+size = Vector2(1000, 1000)
+
+[sub_resource type="SphereMesh" id="SphereMesh_o0mra"]
+radius = 5.0
+height = 10.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_c2n18"]
+radius = 5.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c2n18"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 0)
+stencil_mode = 3
+stencil_flags = 2
+stencil_reference = 123
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_0u0d7"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("4_0u0d7")
+metadata/_custom_type_script = "uid://jxepgw1atqhk"
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_fxe0t"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("5_fxe0t")
+stencil_effect = SubResource("CompositorEffect_0u0d7")
+depth_threshold = 0.035
+normal_threshold = 0.25
+metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_jb31b"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("6_jb31b")
+extraction_effect = SubResource("CompositorEffect_fxe0t")
+distance = 41
+samples = 8
+metadata/_custom_type_script = "uid://crv10gdfdqjmm"
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_ktpcq"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("7_wbpse")
+jump_flood_effect = SubResource("CompositorEffect_jb31b")
+outside_width = 0
+inside_width = 3
+inside_line_color = Color(0, 0, 1, 1)
+metadata/_custom_type_script = "uid://uauh2w1q8ntw"
+
+[sub_resource type="Compositor" id="Compositor_00yce"]
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_0u0d7"), SubResource("CompositorEffect_fxe0t"), SubResource("CompositorEffect_jb31b"), SubResource("CompositorEffect_ktpcq")])
+
+[node name="LineMeshOutline" type="Node3D" unique_id=1670306335]
+script = ExtResource("1_c2n18")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1034757398]
+environment = ExtResource("1_ryrnd")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="WorldEnvironment" unique_id=2074239348]
+transform = Transform3D(0.7071067, 0.35355338, -0.61237234, 0, 0.8660254, 0.49999994, 0.7071067, -0.35355338, 0.61237234, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=257464613]
+material_override = SubResource("ShaderMaterial_c2n18")
+mesh = SubResource("PlaneMesh_fwqmn")
+
+[node name="Target" type="StaticBody3D" parent="." unique_id=1455873638]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Target" unique_id=1052574480]
+mesh = SubResource("SphereMesh_o0mra")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Target" unique_id=1841266467]
+shape = SubResource("SphereShape3D_c2n18")
+
+[node name="LineMesh" type="MeshInstance3D" parent="." unique_id=1748668848]
+unique_name_in_owner = true
+material_override = SubResource("StandardMaterial3D_c2n18")
+
+[node name="CamStand" type="Node3D" parent="." unique_id=1476199415]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.545)
+
+[node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=552786362]
+transform = Transform3D(1, 0, 0, 0, 0.9999999, 0, 0, 0, 0.9999999, 0, 5, 0)
+compositor = SubResource("Compositor_00yce")
