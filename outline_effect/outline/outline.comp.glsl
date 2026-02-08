@@ -58,7 +58,7 @@ void main() {
         return;
     }
     
-    vec2 uv_norm = vec2(uv) / size;
+    vec2 uv_norm = vec2(uv) / params.raster_size;
 
     float distance_sample = get_distance(uv_norm);
 
