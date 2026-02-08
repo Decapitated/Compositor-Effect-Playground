@@ -6,10 +6,10 @@ const FAST_NOISE_LITE_PATH := "res://outline_effect/outline/FastNoiseLite.glsl"
 
 @export var jump_flood_effect: JumpFloodEffect
 
-@export_range(0, 10, 1, "or_greater") var outside_width: int = 2
-@export_range(0, 10, 1, "or_greater") var inside_width: int = 2
-@export_range(0, 10, 1, "or_greater") var outside_offset: int = 0
-@export_range(0, 10, 1, "or_greater") var inside_offset: int = 0
+@export_range(0, 10, 0.01, "or_greater") var outside_width: float = 0.0
+@export_range(0, 10, 0.01, "or_greater") var inside_width: float = 1.0
+@export_range(0, 10, 0.01, "or_greater") var outside_offset: float = 0
+@export_range(0, 10, 0.01, "or_greater") var inside_offset: float = 0
 @export var outside_line_color: Color = Color.BLACK
 @export var inside_line_color: Color = Color.BLACK
 
@@ -91,9 +91,9 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         outside_line_color.g,
         outside_line_color.b,
         outside_line_color.a,
-        float(inside_width),   # Inside Width                 (4) (4)
-        float(outside_offset), # Outside Offset               (4) (8)
-        float(inside_offset),  # Inside Offset                (4) (12)
+        inside_width,          # Inside Width                 (4) (4)
+        outside_offset,        # Outside Offset               (4) (8)
+        inside_offset,         # Inside Offset                (4) (12)
         0.0,                   # Padding                      (4) (16)
         inside_line_color.r,   # Inside Color                 (16)(16)
         inside_line_color.g,
