@@ -42,8 +42,17 @@ float distance_sqr( vec2 A, vec2 B ) {
     return dot( C, C );
 }
 
-vec3 get_extraction(vec2 uv) {
-    return texture(extraction_texture, uv).rgb;
+vec2 uv_norm(ivec2 uv) {
+    return (uv + 1.0) / params.raster_size;
+}
+
+vec3 get_extraction(ivec2 uv) {
+    return texture(extraction_texture, uv_norm(uv)).rgb;
+}
+
+float get_extraction_seed(ivec2 uv) {
+    vec3 extraction = get_extraction(uv);
+    return float(clamp(extraction.x + extraction.y + extraction.z, 0.0, 1.0));
 }
 
 vec2 get_seed(ivec2 uv) {
@@ -75,6 +84,24 @@ vec2 get_closest_seed(ivec2 uv, ivec2 size) {
     return closest_seed;
 }
 
+float refine_seed(ivec2 uv, ivec2 seed_uv, float seed_distance, ivec2 size) {
+    float min_dist = seed_distance;
+    for(int x = -2; x <= 2; x++) {
+        for(int y = -2; y <= 2; y++) {
+            ivec2 sample_uv = seed_uv + ivec2(x, y);
+            if(sample_uv.x < 0.0 || sample_uv.x >= size.x || sample_uv.y < 0.0 || sample_uv.y >= size.y) {
+                continue;
+            }
+            float sample_seed = get_extraction_seed(sample_uv);
+            if(sample_seed > 0.0) {
+                float dist_sqr = distance_sqr(uv, sample_uv);
+                min_dist = min(dist_sqr, min_dist);
+            }
+        }
+    }
+    return min_dist;
+}
+
 // The code we want to execute in each invocation.
 void main() {
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
@@ -86,8 +113,7 @@ void main() {
         return;
     }
 
-    vec2 uv_norm = vec2(uv) / size;
-    vec3 extraction_sample = get_extraction(uv_norm);
+    float extraction_sample = get_extraction_seed(uv);
 
     vec2 closest_seed_sample = get_seed(uv);
     float css_distance_sqr = closest_seed_sample == vec2(-1.0) ?
@@ -98,7 +124,7 @@ void main() {
     float pass = params.pass;
     // Pass 0: Initial Seed
     if(pass == 0.0) {
-        if(length(extraction_sample) > 0.0) {
+        if(extraction_sample > 0.0) {
             color.xy = uv;
         }
     }
@@ -115,18 +141,18 @@ void main() {
     }
     // Pass 2: Store Result
     else if(pass == 2.0) {
-        float dist = sqrt(css_distance_sqr);
+        float dist = sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
         color.rgb = vec3(dist);
     }
     // Pass 3: Inverse Seed
     else if(pass == 3.0) {
-        if(length(extraction_sample) == 0.0) {
+        if(extraction_sample == 0.0) {
             color.xy = uv;
         }
     }
     // Pass 5: Store Inverse Result
     else if(pass == 5.0) {
-        float dist = sqrt(css_distance_sqr);
+        float dist = sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
         color.rgb = vec3(-dist);
     }
 

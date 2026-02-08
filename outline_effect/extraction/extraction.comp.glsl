@@ -184,7 +184,7 @@ void main() {
     vec3 samples = vec3(depth_sample * depth_mask, normal_sample * depth_mask, stencil_sample);
 
     color.rgb = samples;
-    color.rgb = vec3(stencil);
+    // color.rgb = vec3(stencil);
 
     imageStore(output_image, uv, color);
     if(params.debug == 1.0) {
