@@ -49,10 +49,8 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("4_d8u2q")
 jump_flood_effect = SubResource("CompositorEffect_gbl11")
-outside_width = 3
-inside_width = 3
-outside_line_color = Color(0, 0, 7.1787453, 1)
-inside_line_color = Color(0, 0, 1, 1)
+outside_line_color = Color(0, 0, 18.892157, 1)
+inside_line_color = Color(0, 0, 18.892157, 1)
 metadata/_custom_type_script = "uid://uauh2w1q8ntw"
 
 [resource]
