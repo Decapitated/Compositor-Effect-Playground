@@ -7,7 +7,7 @@ const FAST_NOISE_LITE_PATH := "res://outline_effect/outline/FastNoiseLite.glsl"
 @export var jump_flood_effect: JumpFloodEffect
 
 @export_range(0, 10, 0.01, "or_greater") var outside_width: float = 0.0
-@export_range(0, 10, 0.01, "or_greater") var inside_width: float = 1.0
+@export_range(0, 10, 0.01, "or_greater") var inside_width: float = 3.0
 @export_range(0, 10, 0.01, "or_greater") var outside_offset: float = 0
 @export_range(0, 10, 0.01, "or_greater") var inside_offset: float = 0
 @export var outside_line_color: Color = Color.BLACK
