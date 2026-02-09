@@ -93,7 +93,7 @@ float refine_seed(ivec2 uv, ivec2 seed_uv, float seed_distance, ivec2 size) {
                 continue;
             }
             float sample_seed = get_extraction_seed(sample_uv);
-            if(sample_seed > 0.0) {
+            if((params.pass == 3.0 && sample_seed > 0.0) || (params.pass == 5.0 && sample_seed == 0.0)) {
                 float dist_sqr = distance_sqr(uv, sample_uv);
                 min_dist = min(dist_sqr, min_dist);
             }
