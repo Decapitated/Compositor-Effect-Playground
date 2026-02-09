@@ -43,7 +43,7 @@ float distance_sqr( vec2 A, vec2 B ) {
 }
 
 vec2 uv_norm(ivec2 uv) {
-    return (uv + 1.0) / params.raster_size;
+    return (vec2(uv) + 0.5) / (params.raster_size - 0.5);
 }
 
 vec3 get_extraction(ivec2 uv) {
