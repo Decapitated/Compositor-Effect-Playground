@@ -143,7 +143,7 @@ void main() {
         return;
     }
 
-    vec2 uv_norm = (vec2(uv) + 0.5) / (params.raster_size - 0.5);
+    vec2 uv_norm = (vec2(uv) + 0.5) / params.raster_size;
 
     vec4 color = vec4(vec3(0.0), 1.0);
     vec4 normal = get_normal(uv_norm);
