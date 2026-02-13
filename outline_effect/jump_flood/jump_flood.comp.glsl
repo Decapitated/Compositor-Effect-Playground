@@ -141,7 +141,8 @@ void main() {
     }
     // Pass 2: Store Result
     else if(pass == 2.0) {
-        float dist = sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
+        float dist = closest_seed_sample == vec2(-1.0) ?
+            10000000 : sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
         color.rgb = vec3(dist);
     }
     // Pass 3: Inverse Seed
@@ -152,7 +153,8 @@ void main() {
     }
     // Pass 5: Store Inverse Result
     else if(pass == 5.0) {
-        float dist = sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
+        float dist = closest_seed_sample == vec2(-1.0) ?
+            10000000 : sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
         color.rgb = vec3(-dist);
     }
 
