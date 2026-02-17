@@ -91,7 +91,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         outside_line_color.g,
         outside_line_color.b,
         outside_line_color.a,
-        inside_width,          # Inside Width                 (4) (4)
+        inside_width if jump_flood_effect.inverse_pass else -1.0, # Inside Width                 (4) (4)
         outside_offset,        # Outside Offset               (4) (8)
         inside_offset,         # Inside Offset                (4) (12)
         0.0,                   # Padding                      (4) (16)
