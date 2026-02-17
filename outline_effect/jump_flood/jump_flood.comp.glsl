@@ -4,6 +4,8 @@
 
 #define PI 3.14159265359
 
+#define INVALID_SEED uvec2(65535)
+
 // Provided by godot "virtually".
 // https://github.com/godotengine/godot/blob/98782b6c8c9cabe0fb7c80bc62640735ecb076d3/servers/rendering/renderer_rd/renderer_scene_render_rd.cpp#L1679C6-L1679C7
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
@@ -22,8 +24,8 @@ layout(rgba16f, set = 0, binding = 1) uniform image2D color_image;
 
 layout(set = 0, binding = 2) uniform sampler2D extraction_texture;
 
-layout(rgba16f, set = 0, binding = 3) uniform image2D jump_flood_image;
-layout(rgba16f, set = 0, binding = 4) uniform image2D output_image;
+layout(rg16ui, set = 0, binding = 3) uniform uimage2D jump_flood_image;
+layout(r16f, set = 0, binding = 4) uniform image2D output_image;
 
 // Our push constant.
 // Must be aligned to 16 bytes, just like the push constant we passed from the script.
@@ -55,15 +57,15 @@ float get_extraction_seed(ivec2 uv) {
     return float(clamp(extraction.x + extraction.y + extraction.z, 0.0, 1.0));
 }
 
-vec2 get_seed(ivec2 uv) {
+uvec2 get_seed(ivec2 uv) {
     return imageLoad(jump_flood_image, uv).rg;
 }
 
-vec2 get_closest_seed(ivec2 uv, ivec2 size) {
+uvec2 get_closest_seed(ivec2 uv, ivec2 size) {
     float min_dist = 10000000.0;
-    vec2 closest_seed = get_seed(uv);
-    if(closest_seed == uv) {
-        return uv;
+    uvec2 closest_seed = get_seed(uv);
+    if(closest_seed == uvec2(uv)) {
+        return closest_seed;
     }
     for(int i = 0; i < int(params.samples); i++) {
         float angle = ((2.0*PI) / params.samples) * i;
@@ -72,8 +74,8 @@ vec2 get_closest_seed(ivec2 uv, ivec2 size) {
         if(sample_uv.x < 0.0 || sample_uv.x >= size.x || sample_uv.y < 0.0 || sample_uv.y >= size.y) {
             continue;
         }
-        vec2 seed_sample = get_seed(sample_uv);
-        if(seed_sample != vec2(-1.0)) {
+        uvec2 seed_sample = get_seed(sample_uv);
+        if(seed_sample != INVALID_SEED) {
             float dist_sqr = distance_sqr(uv, seed_sample);
             if(dist_sqr < min_dist) {
                 closest_seed = seed_sample;
@@ -115,8 +117,8 @@ void main() {
 
     float extraction_sample = get_extraction_seed(uv);
 
-    vec2 closest_seed_sample = get_seed(uv);
-    float css_distance_sqr = closest_seed_sample == vec2(-1.0) ?
+    uvec2 closest_seed_sample = get_seed(uv);
+    float css_distance_sqr = closest_seed_sample == INVALID_SEED ?
         10000000 : distance_sqr(uv, closest_seed_sample);
     
     vec4 color = vec4(closest_seed_sample, 0.0, 1.0);
@@ -130,8 +132,8 @@ void main() {
     }
     // Pass 1 & 4: Jump Flood
     else if(pass == 1.0 || pass == 4.0) {
-        vec2 closest_seed = get_closest_seed(uv, size);
-        if(closest_seed != vec2(-1.0)) {
+        uvec2 closest_seed = get_closest_seed(uv, size);
+        if(closest_seed != INVALID_SEED) {
             float cs_distance_sqr = distance_sqr(uv, closest_seed);
 
             if(cs_distance_sqr <= css_distance_sqr) {
@@ -141,7 +143,7 @@ void main() {
     }
     // Pass 2: Store Result
     else if(pass == 2.0) {
-        float dist = closest_seed_sample == vec2(-1.0) ?
+        float dist = closest_seed_sample == INVALID_SEED ?
             10000000 : sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
         color.rgb = vec3(dist);
     }
@@ -153,7 +155,7 @@ void main() {
     }
     // Pass 5: Store Inverse Result
     else if(pass == 5.0) {
-        float dist = closest_seed_sample == vec2(-1.0) ?
+        float dist = closest_seed_sample == INVALID_SEED ?
             10000000 : sqrt(refine_seed(uv, ivec2(closest_seed_sample), css_distance_sqr, size));
         color.rgb = vec3(-dist);
     }
@@ -167,6 +169,6 @@ void main() {
             imageStore(color_image, uv, vec4(distance_field, 1.0));
         }
     } else {
-        imageStore(jump_flood_image, uv, color);
+        imageStore(jump_flood_image, uv, uvec4(color.r, color.g, 0, 0));
     }
 }

@@ -5,7 +5,10 @@ class_name JumpFloodEffect extends CompositorEffect
 
 @export_range(1, 10, 1, "or_greater") var distance: int = 10
 @export_range(3, 32, 1) var samples: int = 4
+@export var inverse_pass: bool = true
 @export var debug := false
+
+const JUMP_FLOOD_CLEAR_COLOR: Color = Color(65535, 65535, 0.0, 0.0) # R16G16_UINT has a range of [0, 65535]
 
 var _rd: RenderingDevice = null
 
@@ -13,7 +16,8 @@ var _shader: RID
 var _pipeline: RID
 var _linear_sampler: RID
 
-var _texture_format: RDTextureFormat = RDTextureFormat.new()
+var _jump_flood_texture_format: RDTextureFormat = RDTextureFormat.new()
+var _output_texture_format: RDTextureFormat = RDTextureFormat.new()
 var _jump_flood_texture: RID
 var _output_texture: RID
 var output_texture: Texture2DRD = Texture2DRD.new()
@@ -81,7 +85,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         return
     
     if !_output_texture.is_valid() || !_jump_flood_texture.is_valid() || \
-            _texture_format.width != size.x || _texture_format.height != size.y:
+            _output_texture_format.width != size.x || _output_texture_format.height != size.y:
         _create_textures(size.x, size.y)
 
     @warning_ignore("integer_division")
@@ -147,7 +151,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, extraction_uniform, jump_flood_uniform, output_uniform])
 
         #region Run pass 0 (Seed)
-        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        _rd.texture_clear(_jump_flood_texture, JUMP_FLOOD_CLEAR_COLOR, 0, 1, 0, 1)
         push_constant[6] = 0.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
         #endregion
@@ -164,22 +168,23 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
         #endregion
         #region Run pass 3 (Inverse Seed)
-        _rd.texture_clear(_jump_flood_texture, Color(-1.0, -1.0, 0.0, 0.0), 0, 1, 0, 1)
+        _rd.texture_clear(_jump_flood_texture, JUMP_FLOOD_CLEAR_COLOR, 0, 1, 0, 1)
         push_constant[6] = 3.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
         #endregion
-        #region Run pass 4 (Inside Jump Flood)
-        push_constant[6] = 4.0
-        current_offset = distance
-        while current_offset >= 1.0:
-            push_constant[4] = current_offset
+        if inverse_pass:
+            #region Run pass 4 (Inside Jump Flood)
+            push_constant[6] = 4.0
+            current_offset = distance
+            while current_offset >= 1.0:
+                push_constant[4] = current_offset
+                _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+                current_offset /= 2.0
+            #endregion
+            #region Run pass 5 (Store Inside)
+            push_constant[6] = 5.0
             _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
-            current_offset /= 2.0
-        #endregion
-        #region Run pass 5 (Store Inside)
-        push_constant[6] = 5.0
-        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
-        #endregion
+            #endregion
 
 #region Shader
 func _check_shader() -> void:
@@ -218,29 +223,42 @@ func _build_shader(shader_code: String) -> RID:
 #endregion
 
 func _create_textures(width: int, height: int) -> void:
-    _texture_format = RDTextureFormat.new()
-    _texture_format.width = width
-    _texture_format.height = height
-    _texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT
-    _texture_format.usage_bits = \
+    #region Create Jump Flood Texture
+    _jump_flood_texture_format = RDTextureFormat.new()
+    _jump_flood_texture_format.width = width
+    _jump_flood_texture_format.height = height
+    _jump_flood_texture_format.format = RenderingDevice.DATA_FORMAT_R16G16_UINT
+    _jump_flood_texture_format.usage_bits = \
         RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
         RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
         RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
         RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
         RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT # Allows us to clear the texture.
 
-    # Create Jump Flood Texture
-    var new_jump_flood_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    var new_jump_flood_texture := _rd.texture_create(_jump_flood_texture_format, RDTextureView.new())
     if _jump_flood_texture.is_valid():
         _rd.free_rid(_jump_flood_texture)
     _jump_flood_texture = new_jump_flood_texture
+    #endregion
 
-    # Create Output Texture
-    var new_output_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    #region Create Output Texture
+    _output_texture_format = RDTextureFormat.new()
+    _output_texture_format.width = width
+    _output_texture_format.height = height
+    _output_texture_format.format = RenderingDevice.DATA_FORMAT_R16_SFLOAT
+    _output_texture_format.usage_bits = \
+        RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
+        RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
+        RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
+        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
+        RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT # Allows us to clear the texture.
+
+    var new_output_texture := _rd.texture_create(_output_texture_format, RDTextureView.new())
     output_texture.texture_rd_rid = new_output_texture
     if _output_texture.is_valid():
         _rd.free_rid(_output_texture)
     _output_texture = new_output_texture
+    #endregion
 
 func _run_compute(uniform_set_0: RID, push_constant: PackedFloat32Array, x_groups: int, y_groups: int, z_groups: int) -> void:
     var compute_list: int = _rd.compute_list_begin()
