@@ -5,7 +5,7 @@ class_name JumpFloodEffect extends CompositorEffect
 
 @export_range(1, 10, 1, "or_greater") var distance: int = 10
 @export_range(3, 32, 1) var samples: int = 4
-@export var inverse_pass: bool = true
+@export var inverse_pass: bool = false
 @export var debug := false
 
 const JUMP_FLOOD_CLEAR_COLOR: Color = Color(65535, 65535, 0.0, 0.0) # R16G16_UINT has a range of [0, 65535]
