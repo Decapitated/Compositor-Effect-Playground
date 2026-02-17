@@ -25,7 +25,7 @@ layout(rgba16f, set = 0, binding = 1) uniform image2D color_image;
 layout(set = 0, binding = 2) uniform sampler2D extraction_texture;
 
 layout(rg16ui, set = 0, binding = 3) uniform uimage2D jump_flood_image;
-layout(rgba16f, set = 0, binding = 4) uniform image2D output_image;
+layout(r16f, set = 0, binding = 4) uniform image2D output_image;
 
 // Our push constant.
 // Must be aligned to 16 bytes, just like the push constant we passed from the script.

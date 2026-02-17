@@ -243,7 +243,7 @@ func _create_textures(width: int, height: int) -> void:
     _output_texture_format = RDTextureFormat.new()
     _output_texture_format.width = width
     _output_texture_format.height = height
-    _output_texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT
+    _output_texture_format.format = RenderingDevice.DATA_FORMAT_R16_SFLOAT
     _output_texture_format.usage_bits = \
         RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
         RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
