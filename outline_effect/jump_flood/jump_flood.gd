@@ -5,6 +5,7 @@ class_name JumpFloodEffect extends CompositorEffect
 
 @export_range(1, 10, 1, "or_greater") var distance: int = 10
 @export_range(3, 32, 1) var samples: int = 4
+@export var inverse_pass: bool = true
 @export var debug := false
 
 const JUMP_FLOOD_CLEAR_COLOR: Color = Color(65535, 65535, 0.0, 0.0) # R16G16_UINT has a range of [0, 65535]
@@ -171,18 +172,19 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         push_constant[6] = 3.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
         #endregion
-        #region Run pass 4 (Inside Jump Flood)
-        push_constant[6] = 4.0
-        current_offset = distance
-        while current_offset >= 1.0:
-            push_constant[4] = current_offset
+        if inverse_pass:
+            #region Run pass 4 (Inside Jump Flood)
+            push_constant[6] = 4.0
+            current_offset = distance
+            while current_offset >= 1.0:
+                push_constant[4] = current_offset
+                _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+                current_offset /= 2.0
+            #endregion
+            #region Run pass 5 (Store Inside)
+            push_constant[6] = 5.0
             _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
-            current_offset /= 2.0
-        #endregion
-        #region Run pass 5 (Store Inside)
-        push_constant[6] = 5.0
-        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
-        #endregion
+            #endregion
 
 #region Shader
 func _check_shader() -> void:
