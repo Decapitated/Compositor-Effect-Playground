@@ -71,7 +71,7 @@ void main() {
     float inside_offset = params.inside_offset;
 
     float outside_edge = float(outside_width > 0.0 && distance_sample >= outside_offset && distance_sample <= outside_offset + outside_width);
-    float inside_edge = float(inside_width > 0.0 && distance_sample <= -inside_offset && distance_sample >= -inside_offset - inside_width);
+    float inside_edge = float(inside_width > 0.0 && distance_sample < -inside_offset && distance_sample >= -inside_offset - inside_width);
 
     vec4 line_color = mix(params.outside_line_color, params.inside_line_color, inside_edge);
 
