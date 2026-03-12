@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://ci1x0okkkd5v6"]
+
+[ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_pl63d"]
+[ext_resource type="PackedScene" uid="uid://c0r6idvcjwx2h" path="res://prefabs/cam_stand.tscn" id="2_wvwob"]
+[ext_resource type="Compositor" uid="uid://crgdblg2ybmwr" path="res://panini_effect/panini_compositor.tres" id="3_of7vf"]
+
+[node name="PaniniEffect" type="Node3D" unique_id=82953910]
+
+[node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_pl63d")]
+
+[node name="CamStand" parent="." unique_id=134836692 instance=ExtResource("2_wvwob")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+
+[node name="Camera3D" parent="CamStand" index="0" unique_id=2045132986]
+transform = Transform3D(1, 0, 0, 0, 0.9702958, 0.24192177, 0, -0.24192177, 0.9702958, 0, 3, 0)
+compositor = ExtResource("3_of7vf")
+fov = 135.5
+
+[editable path="CamStand"]
