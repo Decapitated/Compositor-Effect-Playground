@@ -10,6 +10,9 @@ effect_callback_type = 4
 needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("1_qyjch")
+curvature = 100.0
+crop = 0.825
+squash = 0.825
 metadata/_custom_type_script = "uid://m7iavldn4um3"
 
 [resource]

@@ -2,12 +2,18 @@
 class_name PaniniEffect extends CompositorEffect
 
 @export_range(0.0, 1.0, 0.001, "or_greater") var curvature: float = 1.0
+@export_range(0.0, 1.0, 0.001, "or_greater") var crop: float = 1.0
+@export_range(0.0, 1.0, 0.001, "or_greater") var squash: float = 1.0
 
 var _rd: RenderingDevice = null
 
 var _shader: RID
 var _pipeline: RID
 var _linear_sampler: RID
+
+var _texture_format: RDTextureFormat = RDTextureFormat.new()
+var _texture: RID
+var output_texture: Texture2DRD = Texture2DRD.new()
 
 var _cache_shader_code := ""
 
@@ -25,8 +31,8 @@ func _init() -> void:
     _rd = RenderingServer.get_rendering_device()
 
     var linear_sampler_state: RDSamplerState = RDSamplerState.new()
-    linear_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
-    linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
+    linear_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
+    linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     _linear_sampler = _rd.sampler_create(linear_sampler_state)
 
 func _notification(what: int) -> void:
@@ -35,6 +41,8 @@ func _notification(what: int) -> void:
             _rd.free_rid(_shader)
         if _linear_sampler.is_valid():
             _rd.free_rid(_linear_sampler)
+        if _texture.is_valid():
+            _rd.free_rid(_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
     _check_shader()
@@ -63,6 +71,10 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var size: Vector2i = scene_buffers.get_internal_size()
     if size.x == 0 && size.y == 0:
         return
+    
+    if !output_texture.texture_rd_rid.is_valid() || \
+            _texture_format.width != size.x || _texture_format.height != size.y:
+        _create_output_texture(size.x, size.y)
 
     @warning_ignore("integer_division")
     var x_groups: int = (size.x - 1) / 16 + 1
@@ -71,10 +83,10 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     var z_groups: int = 1
 
     var push_constant := PackedVector4Array([
-        Vector4(
-            size.x, size.y, # Raster Size
-            0.0,            # View
-            curvature)
+        Vector4(size.x, size.y, # Raster Size
+                0.0,            # View
+                0.0),           # Pass
+        Vector4(curvature, crop, squash, 0.0)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    
@@ -103,9 +115,20 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         color_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
         color_uniform.binding = 1
         color_uniform.add_id(color_image)
+        # Output Image
+        var output_uniform := RDUniform.new()
+        output_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_IMAGE
+        output_uniform.binding = 2
+        output_uniform.add_id(_texture)
         #endregion
 
-        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform])
+        var uniform_set_0: RID = UniformSetCacheRD.get_cache(_shader, 0, [scene_data_uniform, color_uniform, output_uniform])
+        
+        # Pass 0
+        _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
+
+        # Pass 1
+        push_constant[0].w = 1.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
 
 #region Shader
@@ -143,6 +166,24 @@ func _build_shader(shader_code: String) -> RID:
 
     return new_shader
 #endregion
+
+func _create_output_texture(width: int, height: int) -> void:
+    _texture_format = RDTextureFormat.new()
+    _texture_format.width = width
+    _texture_format.height = height
+    _texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT
+    _texture_format.usage_bits = \
+        RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
+        RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
+        RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
+        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+
+    var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
+    output_texture.texture_rd_rid = new_texture
+
+    if _texture.is_valid():
+        _rd.free_rid(_texture)
+    _texture = new_texture
 
 func _run_compute(uniform_set_0: RID, push_constant: PackedVector4Array, x_groups: int, y_groups: int, z_groups: int) -> void:
     var compute_list: int = _rd.compute_list_begin()
