@@ -36,6 +36,7 @@ layout(push_constant, std430) uniform Params {
     float offset;
     float samples;
     float pass;
+    float pad;
 }
 params;
 
