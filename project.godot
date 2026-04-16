@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Compositor Effect Playground"
-config/features=PackedStringArray("4.6", "Forward Plus")
+config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [display]
@@ -31,5 +31,6 @@ lights_and_shadows/directional_shadow/size=16384
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality=0
 lights_and_shadows/positional_shadow/soft_shadow_filter_quality=0
 anti_aliasing/screen_space_roughness_limiter/enabled=false
-anti_aliasing/quality/screen_space_aa=2
+scaling_3d/mode=2
+scaling_3d/scale=2.0
 lights_and_shadows/positional_shadow/atlas_size=16384
