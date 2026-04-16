@@ -1,3 +1,14 @@
 [remap]
 
-importer="keep"
+importer="glsl"
+type="RDShaderFile"
+uid="uid://cyq8de800ya26"
+path="res://.godot/imported/panini.comp.glsl-62bb21c101f998b1427d2127d14987ec.res"
+
+[deps]
+
+source_file="res://panini_effect/panini/panini.comp.glsl"
+dest_files=["res://.godot/imported/panini.comp.glsl-62bb21c101f998b1427d2127d14987ec.res"]
+
+[params]
+

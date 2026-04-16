@@ -9,11 +9,10 @@
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_pl63d")]
 
 [node name="CamStand" parent="." unique_id=134836692 instance=ExtResource("2_wvwob")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
 
 [node name="Camera3D" parent="CamStand" index="0" unique_id=2045132986]
-transform = Transform3D(1, 0, 0, 0, 0.9702958, 0.24192177, 0, -0.24192177, 0.9702958, 0, 3, 0)
+transform = Transform3D(1, 0, 0, 0, 0.9659258, 0.25881904, 0, -0.25881904, 0.9659258, 0, 5, 10)
 compositor = ExtResource("3_of7vf")
-fov = 135.5
+fov = 130.0
 
 [editable path="CamStand"]

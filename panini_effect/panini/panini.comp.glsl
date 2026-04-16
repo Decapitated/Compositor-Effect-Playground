@@ -1,3 +1,4 @@
+#[compute]
 #version 450
 
 #define MAX_VIEWS 2
@@ -32,6 +33,7 @@ layout(push_constant, std430) uniform Params {
     float curvature; // Panini d
     float crop;      // horizontal crop factor
     float squash;    // vertical squash
+    float pad;
 }
 params;
 

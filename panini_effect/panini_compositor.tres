@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://m7iavldn4um3" path="res://panini_effect/panini/panini.gd" id="1_qyjch"]
 
-[sub_resource type="CompositorEffect" id="CompositorEffect_jc40m"]
+[sub_resource type="CompositorEffect" id="CompositorEffect_p5301"]
 resource_local_to_scene = false
 resource_name = ""
 enabled = true
@@ -10,10 +10,8 @@ effect_callback_type = 4
 needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("1_qyjch")
-curvature = 100.0
-crop = 0.825
-squash = 0.825
+curvature = 1.5
 metadata/_custom_type_script = "uid://m7iavldn4um3"
 
 [resource]
-compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_jc40m")])
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_p5301")])
