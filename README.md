@@ -1,9 +1,7 @@
 # Compositor Effect Playground
 A Godot project for playing around with compositor effects.
 
-## Effects
-
-### Outlines
+## Outlines
 <img src="docs/wide_outlines.png">
 
 *Stencil → Extraction → Jump Flood → Outline*
@@ -15,7 +13,7 @@ A Godot project for playing around with compositor effects.
 | [Distance Field Outlines - Pink Arcana](https://github.com/pink-arcana/godot-distance-field-outlines) | First saw it when it came out in 2024. Great learning material. |
 | [Getting started with CompositorEffects and Compute shaders - Pink Arcana](https://github.com/pink-arcana/godot-distance-field-outlines/discussions/1) | Discussion on the above. |
 
-### Panini Projection
+## Panini Projection
 | Before | After |
 |-|-|
 | <img src="docs/panini_before.png"> | <img src="docs/panini_after.png"> |
