@@ -1,8 +1,7 @@
 @tool
 class_name OutlineEffect extends CompositorEffect
 
-const SHADER_PATH := "res://outline_effect/outline/outline.comp.glsl"
-const FAST_NOISE_LITE_PATH := "res://outline_effect/outline/FastNoiseLite.glsl"
+const SHADER_UID_PATH := "uid://b5y6v0a26a784"
 
 @export var jump_flood_effect: JumpFloodEffect
 
@@ -19,7 +18,7 @@ var _shader: RID
 var _pipeline: RID
 var _linear_sampler: RID
 
-var _cache_shader_code := ""
+var _shader_uid: int = -1
 
 enum CallbackError {
     OK = 0,
@@ -39,6 +38,11 @@ func _init() -> void:
     linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     _linear_sampler = _rd.sampler_create(linear_sampler_state)
 
+    _shader_uid = ResourceLoader.get_resource_uid(SHADER_UID_PATH)
+    _check_shader()
+    if Engine.is_editor_hint():
+        EditorInterface.get_resource_filesystem().resources_reimported.connect(_on_resources_reimported)
+
 func _notification(what: int) -> void:
     if what == NOTIFICATION_PREDELETE:
         if _shader.is_valid():
@@ -50,7 +54,6 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     if jump_flood_effect == null:
         return
 
-    _check_shader()
     # Check if the _pipeline is valid.
     if !_pipeline.is_valid():
         if error != CallbackError.INVALID_PIPELINE:
@@ -147,32 +150,24 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         _rd.compute_list_end()
 
 #region Shader
+func _on_resources_reimported(resource_paths: PackedStringArray) -> void:
+    for path in resource_paths:
+        if ResourceLoader.get_resource_uid(path) == _shader_uid:
+            _check_shader()
+            break
+
 func _check_shader() -> void:
-    var shader_code := _get_shader_code()
-    if shader_code != _cache_shader_code:
-        _cache_shader_code = shader_code
-        var new_shader := _build_shader(shader_code)
-        if new_shader.is_valid():
-            if _shader.is_valid():
-                _rd.free_rid(_shader)
-            _shader = new_shader
-            _pipeline = _rd.compute_pipeline_create(_shader)
+    var new_shader := _build_shader()
+    if new_shader.is_valid():
+        if _shader.is_valid():
+            _rd.free_rid(_shader)
+        _shader = new_shader
+        _pipeline = _rd.compute_pipeline_create(_shader)
 
-func _get_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string(SHADER_PATH)
-    assert(!shader_code.is_empty(), "Shader code is empty")
-    var fast_noise_code: String = FileAccess.get_file_as_string(FAST_NOISE_LITE_PATH)
-    assert(!fast_noise_code.is_empty(), str(FileAccess.get_open_error()))
-    shader_code = shader_code.replace("#[FastNoiseLite]", fast_noise_code)
-    return shader_code
-
-func _build_shader(shader_code: String) -> RID:
+func _build_shader() -> RID:
     print("Building outline shader...")
-    var shader_source := RDShaderSource.new()
-    shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
-    shader_source.source_compute = shader_code
-
-    var shader_spirv: RDShaderSPIRV = _rd.shader_compile_spirv_from_source(shader_source)
+    var shader_file: RDShaderFile = load(SHADER_UID_PATH)
+    var shader_spirv: RDShaderSPIRV = shader_file.get_spirv()
     if shader_spirv.compile_error_compute != "":
         push_error(shader_spirv.compile_error_compute)
         return RID()

@@ -1,3 +1,4 @@
+#[compute]
 #version 450
 
 #define MAX_VIEWS 2
@@ -12,9 +13,8 @@
 #include "godot/scene_data_inc.glsl"
 
 // Included by compositor effect.
-#ifdef NOISE
-#[FastNoiseLite]
-#endif
+// FastNoiseLite
+#include "uid://4rmplwclknyj"
 
 // Invocations in the (x, y, z) dimension.
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
