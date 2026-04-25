@@ -31,6 +31,7 @@ layout(push_constant, std430) uniform Params {
     float scale;
     float depth_threshold;
     float normal_threshold;
+    float pad;
 }
 params;
 
