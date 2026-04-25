@@ -52,7 +52,6 @@ func _notification(what: int) -> void:
             _rd.free_rid(_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
-    # _check_shader()
     # Check if the _pipeline is valid.
     if !_pipeline.is_valid():
         if error != CallbackError.INVALID_PIPELINE:
