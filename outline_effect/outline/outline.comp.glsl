@@ -12,7 +12,6 @@
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
 #include "godot/scene_data_inc.glsl"
 
-// Included by compositor effect.
 // FastNoiseLite
 #include "uid://4rmplwclknyj"
 
