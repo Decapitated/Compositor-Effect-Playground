@@ -12,8 +12,10 @@
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
 #include "godot/scene_data_inc.glsl"
 
+#ifdef NOISE
 // FastNoiseLite
 #include "uid://4rmplwclknyj"
+#endif
 
 // Invocations in the (x, y, z) dimension.
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
