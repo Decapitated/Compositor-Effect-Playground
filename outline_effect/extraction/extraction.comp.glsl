@@ -1,3 +1,4 @@
+#[compute]
 #version 450
 
 #define MAX_VIEWS 2
