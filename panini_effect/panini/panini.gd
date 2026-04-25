@@ -137,13 +137,13 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         push_constant[0].w = 1.0
         _run_compute(uniform_set_0, push_constant, x_groups, y_groups, z_groups)
 
+#region Shader
 func _on_resources_reimported(resource_paths: PackedStringArray) -> void:
     for path in resource_paths:
         if ResourceLoader.get_resource_uid(path) == _shader_uid:
             _check_shader()
             break
 
-#region Shader
 func _check_shader() -> void:
     var new_shader := _build_shader()
     if new_shader.is_valid():

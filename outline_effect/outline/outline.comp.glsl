@@ -1,3 +1,4 @@
+#[compute]
 #version 450
 
 #define MAX_VIEWS 2
@@ -11,9 +12,9 @@
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
 #include "godot/scene_data_inc.glsl"
 
-// Included by compositor effect.
 #ifdef NOISE
-#[FastNoiseLite]
+// FastNoiseLite
+#include "uid://4rmplwclknyj"
 #endif
 
 // Invocations in the (x, y, z) dimension.

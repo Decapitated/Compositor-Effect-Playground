@@ -1,6 +1,8 @@
 @tool
 class_name StencilEffect extends CompositorEffect
 
+const SHADER_UID_PATH := "uid://6lcajx6boo2d"
+
 @export_range(0, 255, 1) var reference_value: int = 123
 
 var _rd: RenderingDevice = null
@@ -21,8 +23,7 @@ var _texture_format: RDTextureFormat = RDTextureFormat.new()
 var _texture: RID
 var output_texture: Texture2DRD = Texture2DRD.new()
 
-var _cache_vertex_shader_code := ""
-var _cache_fragment_shader_code := ""
+var _shader_uid: int = -1
 var _cache_depth_texture: RID
 var _cache_samples: int = 0
 var _cache_reference_value: int = 0
@@ -58,6 +59,11 @@ func _init() -> void:
     _vertex_array = _rd.vertex_array_create(3, _vertex_format, [_vertex_buffer])
     #endregion
 
+    _shader_uid = ResourceLoader.get_resource_uid(SHADER_UID_PATH)
+    _check_shader()
+    if Engine.is_editor_hint():
+        EditorInterface.get_resource_filesystem().resources_reimported.connect(_on_resources_reimported)
+
 func _notification(what):
     if what == NOTIFICATION_PREDELETE:
         if _vertex_array.is_valid():
@@ -70,8 +76,6 @@ func _notification(what):
             _rd.free_rid(_texture)
 
 func _render_callback(_effect_callback_type: int, render_data: RenderData) -> void:
-    var shader_changed := _check_shader()
-
     var scene_buffers: RenderSceneBuffersRD = render_data.get_render_scene_buffers()
     var scene_data: RenderSceneData = render_data.get_render_scene_data()
     
@@ -124,7 +128,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     elif error == CallbackError.INVALID_FRAMEBUFFER:
         error = CallbackError.OK
 
-    if shader_changed || framebuffer_format_changed || reference_value != _cache_reference_value:
+    if framebuffer_format_changed || reference_value != _cache_reference_value:
         _build_pipeline()
     
     if !_pipeline.is_valid():
@@ -147,50 +151,26 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     _rd.draw_list_draw(draw_list, false, 3)
     _rd.draw_list_end()
 
-func _check_shader() -> bool:
-    var vertex_shader_code := _get_vertex_shader_code()
-    var fragment_shader_code := _get_fragment_shader_code()
-    if vertex_shader_code != _cache_vertex_shader_code || fragment_shader_code != _cache_fragment_shader_code:
-        _cache_vertex_shader_code = vertex_shader_code
-        _cache_fragment_shader_code = fragment_shader_code
-        var new_shader := _build_shader(vertex_shader_code, fragment_shader_code)
-        if new_shader.is_valid():
-            if _shader.is_valid():
-                _rd.free_rid(_shader)
-            _shader = new_shader
-            return true
-    return false
+func _on_resources_reimported(resource_paths: PackedStringArray) -> void:
+    for path in resource_paths:
+        if ResourceLoader.get_resource_uid(path) == _shader_uid:
+            _check_shader()
+            break
 
-func _get_vertex_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/stencil/stencil.vert.glsl")
-    assert(!shader_code.is_empty(), "Shader code is empty")
-    return shader_code
+func _check_shader() -> void:
+    var new_shader := _build_shader()
+    if new_shader.is_valid():
+        if _shader.is_valid():
+            _rd.free_rid(_shader)
+        _shader = new_shader
+        _build_pipeline()
 
-func _get_fragment_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/stencil/stencil.frag.glsl")
-    assert(!shader_code.is_empty(), "Shader code is empty")
-    return shader_code
-
-func _build_shader(vertex_shader_code: String, fragment_shader_code: String) -> RID:
+func _build_shader() -> RID:
     print("Building stencil shader...")
-    var shader_source := RDShaderSource.new()
-    shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
-    shader_source.source_vertex = vertex_shader_code
-    shader_source.source_fragment = fragment_shader_code
-
-    var shader_spirv: RDShaderSPIRV = _rd.shader_compile_spirv_from_source(shader_source)
-    if shader_spirv.compile_error_vertex != "":
-        push_error(shader_spirv.compile_error_vertex)
-        var split_error := shader_spirv.compile_error_vertex.split("ERROR: ")
-        var error_offset := split_error[1].split(":")[1]
-        push_error(vertex_shader_code.split("\n")[int(error_offset) - 2])
-        return RID()
-    
-    if shader_spirv.compile_error_fragment != "":
-        push_error(shader_spirv.compile_error_fragment)
-        var split_error := shader_spirv.compile_error_fragment.split("ERROR: ")
-        var error_offset := split_error[1].split(":")[1]
-        push_error(fragment_shader_code.split("\n")[int(error_offset) - 2])
+    var shader_file: RDShaderFile = load(SHADER_UID_PATH)
+    var shader_spirv: RDShaderSPIRV = shader_file.get_spirv()
+    if shader_spirv.compile_error_compute != "":
+        push_error(shader_spirv.compile_error_compute)
         return RID()
     
     var new_shader := _rd.shader_create_from_spirv(shader_spirv)

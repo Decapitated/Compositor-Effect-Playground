@@ -1,6 +1,8 @@
 @tool
 class_name ExtractionEffect extends CompositorEffect
 
+const SHADER_UID_PATH := "uid://fhn2s7b16iu3"
+
 @export var stencil_effect: StencilEffect
 @export_range(1, 10, 1, "or_greater") var scale := 1
 @export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold := 0.05
@@ -17,7 +19,7 @@ var _texture_format: RDTextureFormat = RDTextureFormat.new()
 var _texture: RID
 var output_texture: Texture2DRD = Texture2DRD.new()
 
-var _cache_shader_code := ""
+var _shader_uid: int = -1
 
 enum CallbackError {
     OK = 0,
@@ -39,6 +41,11 @@ func _init() -> void:
     linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     _linear_sampler = _rd.sampler_create(linear_sampler_state)
 
+    _shader_uid = ResourceLoader.get_resource_uid(SHADER_UID_PATH)
+    _check_shader()
+    if Engine.is_editor_hint():
+        EditorInterface.get_resource_filesystem().resources_reimported.connect(_on_resources_reimported)
+
 func _notification(what: int) -> void:
     if what == NOTIFICATION_PREDELETE:
         if _shader.is_valid():
@@ -52,7 +59,6 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     if stencil_effect == null:
         return
 
-    _check_shader()
     # Check if the _pipeline is valid.
     if !_pipeline.is_valid():
         if error != CallbackError.INVALID_PIPELINE:
@@ -181,29 +187,25 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         _rd.compute_list_dispatch(compute_list, x_groups, y_groups, z_groups)
         _rd.compute_list_end()
 
+#region Shader
+func _on_resources_reimported(resource_paths: PackedStringArray) -> void:
+    for path in resource_paths:
+        if ResourceLoader.get_resource_uid(path) == _shader_uid:
+            _check_shader()
+            break
+
 func _check_shader() -> void:
-    var shader_code := _get_shader_code()
-    if shader_code != _cache_shader_code:
-        _cache_shader_code = shader_code
-        var new_shader := _build_shader(shader_code)
-        if new_shader.is_valid():
-            if _shader.is_valid():
-                _rd.free_rid(_shader)
-            _shader = new_shader
-            _pipeline = _rd.compute_pipeline_create(_shader)
+    var new_shader := _build_shader()
+    if new_shader.is_valid():
+        if _shader.is_valid():
+            _rd.free_rid(_shader)
+        _shader = new_shader
+        _pipeline = _rd.compute_pipeline_create(_shader)
 
-func _get_shader_code() -> String:
-    var shader_code: String = FileAccess.get_file_as_string("res://outline_effect/extraction/extraction.comp.glsl")
-    assert(!shader_code.is_empty(), "Shader code is empty")
-    return shader_code
-
-func _build_shader(shader_code: String) -> RID:
+func _build_shader() -> RID:
     print("Building extraction shader...")
-    var shader_source := RDShaderSource.new()
-    shader_source.language = RenderingDevice.SHADER_LANGUAGE_GLSL
-    shader_source.source_compute = shader_code
-
-    var shader_spirv: RDShaderSPIRV = _rd.shader_compile_spirv_from_source(shader_source)
+    var shader_file: RDShaderFile = load(SHADER_UID_PATH)
+    var shader_spirv: RDShaderSPIRV = shader_file.get_spirv()
     if shader_spirv.compile_error_compute != "":
         push_error(shader_spirv.compile_error_compute)
         return RID()
@@ -214,6 +216,7 @@ func _build_shader(shader_code: String) -> RID:
         return RID()
 
     return new_shader
+#endregion
 
 func _create_output_texture(width: int, height: int) -> void:
     _texture_format = RDTextureFormat.new()
