@@ -1,6 +1,6 @@
 [gd_resource type="Compositor" format=3 uid="uid://crgdblg2ybmwr"]
 
-[ext_resource type="Script" uid="uid://m7iavldn4um3" path="res://panini_effect/panini/panini.gd" id="1_qyjch"]
+[ext_resource type="Script" uid="uid://m7iavldn4um3" path="res://effects/panini_effect/panini/panini.gd" id="1_qyjch"]
 
 [sub_resource type="CompositorEffect" id="CompositorEffect_p5301"]
 resource_local_to_scene = false
