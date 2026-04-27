@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_pl63d"]
 [ext_resource type="PackedScene" uid="uid://c0r6idvcjwx2h" path="res://prefabs/cam_stand.tscn" id="2_wvwob"]
-[ext_resource type="Compositor" uid="uid://crgdblg2ybmwr" path="res://panini_effect/panini_compositor.tres" id="3_of7vf"]
+[ext_resource type="Compositor" uid="uid://crgdblg2ybmwr" path="res://effects/panini_effect/panini_compositor.tres" id="3_of7vf"]
 
 [node name="PaniniEffect" type="Node3D" unique_id=82953910]
 

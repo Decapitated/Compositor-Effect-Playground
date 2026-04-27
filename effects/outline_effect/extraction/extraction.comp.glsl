@@ -32,7 +32,7 @@ layout(push_constant, std430) uniform Params {
     float scale;
     float depth_threshold;
     float normal_threshold;
-    float pad;
+    float only_stencil;
 }
 params;
 
@@ -140,6 +140,7 @@ void main() {
 
     ivec2 size = ivec2(params.raster_size);
     int view = int(params.view);
+    bool only_stencil = bool(params.only_stencil);
 
     if (uv.x >= size.x || uv.y >= size.y) {
         return;
@@ -148,45 +149,48 @@ void main() {
     vec2 uv_norm = (vec2(uv) + 0.5) / params.raster_size;
 
     vec4 color = vec4(vec3(0.0), 1.0);
-    vec4 normal = get_normal(uv_norm);
     float stencil = get_stencil(uv_norm);
+    if(only_stencil) {
+        color.rgb = vec3(stencil);
+    } else {
+        vec4 normal = get_normal(uv_norm);
 
-    vec2 texel_size = scene_data_block.data.screen_pixel_size;
-    
-    float depth_sample = stencil == 0.0 ? 0.0 : sample_depth(uv_norm, texel_size);
-    float normal_sample = stencil == 0.0 ? 0.0 : sample_normal(uv_norm, texel_size);
-    float stencil_sample = sample_stencil(uv_norm, texel_size);
+        vec2 texel_size = scene_data_block.data.screen_pixel_size;
+        
+        float depth_sample = stencil == 0.0 ? 0.0 : sample_depth(uv_norm, texel_size);
+        float normal_sample = stencil == 0.0 ? 0.0 : sample_normal(uv_norm, texel_size);
+        float stencil_sample = sample_stencil(uv_norm, texel_size);
 
-    float normal_mask = ceil(normal_sample - 0.000001);
+        float normal_mask = ceil(normal_sample - 0.000001);
 
-    vec2 ndc = uv_norm * 2.0 - 1.0;
-    ndc.y = -ndc.y;
+        vec2 ndc = uv_norm * 2.0 - 1.0;
+        ndc.y = -ndc.y;
 
-    vec4 view_pos = scene_data_block.data.inv_projection_matrix * vec4(ndc, -1.0, 1.0);
-    vec3 view_dir = normalize(view_pos.xyz); 
+        vec4 view_pos = scene_data_block.data.inv_projection_matrix * vec4(ndc, -1.0, 1.0);
+        vec3 view_dir = normalize(view_pos.xyz); 
 
-    float NdotV = dot(-view_dir, normal.xyz * 2.0 - 1.0);
-    NdotV = NdotV * 0.5 + 0.5;
-    NdotV = 1.0 - NdotV;
-    NdotV = 1.0 - ceil(NdotV - 0.1);
+        float NdotV = dot(-view_dir, normal.xyz * 2.0 - 1.0);
+        NdotV = NdotV * 0.5 + 0.5;
+        NdotV = 1.0 - NdotV;
+        NdotV = 1.0 - ceil(NdotV - 0.1);
 
-    float depth_modulate = sqrt(pow(NdotV, 2) + pow(normal_mask, 2) * 0.25) * get_depth(uv_norm)*100.0;
+        float depth_modulate = sqrt(pow(NdotV, 2) + pow(normal_mask, 2) * 0.25) * get_depth(uv_norm)*100.0;
 
-    depth_sample *= depth_modulate;
-    depth_sample = ceil(depth_sample - params.depth_threshold);
-    depth_sample = saturate(depth_sample);
+        depth_sample *= depth_modulate;
+        depth_sample = ceil(depth_sample - params.depth_threshold);
+        depth_sample = saturate(depth_sample);
 
-    normal_sample *= depth_modulate;
-    normal_sample = ceil(normal_sample - params.normal_threshold);
-    normal_sample = saturate(normal_sample);
+        normal_sample *= depth_modulate;
+        normal_sample = ceil(normal_sample - params.normal_threshold);
+        normal_sample = saturate(normal_sample);
 
-    float depth_mask = saturate(get_linear_depth(uv_norm) / 10.0);
-    depth_mask = 1.0 - floor(depth_mask);
+        float depth_mask = saturate(get_linear_depth(uv_norm) / 10.0);
+        depth_mask = 1.0 - floor(depth_mask);
 
-    vec3 samples = vec3(depth_sample * depth_mask, normal_sample * depth_mask, stencil_sample);
+        vec3 samples = vec3(depth_sample * depth_mask, normal_sample * depth_mask, stencil_sample);
 
-    color.rgb = samples;
-    // color.rgb = vec3(stencil);
+        color.rgb = samples;
+    }
 
     imageStore(output_image, uv, color);
     if(params.debug == 1.0) {
