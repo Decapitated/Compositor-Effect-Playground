@@ -1,4 +1,10 @@
+@tool
 class_name StencilTest extends Control
+
+@export var debug_stencil: bool = false:
+	set(value):
+		debug_stencil = value
+		queue_redraw()
 
 var _stencil_effect: StencilEffect
 var _cache_stencil_value: float = 0.0
@@ -18,3 +24,8 @@ func _gui_input(event: InputEvent) -> void:
 			var stencil_image := _stencil_effect.output_texture.get_image()
 			if stencil_image:
 				_cache_stencil_value = stencil_image.get_pixelv(_cache_mouse_position).r
+
+func _draw() -> void:
+	if debug_stencil:
+		draw_texture(_stencil_effect.output_texture, Vector2.ZERO)
+		queue_redraw()

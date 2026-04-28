@@ -8,6 +8,9 @@
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
 #include "godot/scene_data_inc.glsl"
 
+// Stencil Utilities
+#include "uid://by0bul640m30r"
+
 // Invocations in the (x, y, z) dimension.
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -34,6 +37,7 @@ layout(push_constant, std430) uniform Params {
     float normal_threshold;
     float only_stencil;
     float stencil_ref;
+    float selected_only;
 }
 params;
 
@@ -113,8 +117,13 @@ int get_stencil_(vec2 uv) {
     return int(round(texture(stencil_texture, uv).r));
 }
 
+StencilData get_stencil_data(vec2 uv) {
+    return extract_stencil_data(get_stencil_(uv));
+}
+
 float get_stencil(vec2 uv) {
-    return float(get_stencil_(uv) == params.stencil_ref);
+    StencilData data = get_stencil_data(uv);
+    return float((bool(params.selected_only) && data.selected) || (!bool(params.selected_only) && params.stencil_ref != 0 && data.id == params.stencil_ref));
 }
 
 float sample_stencil(vec2 uv, vec2 texel_size) {

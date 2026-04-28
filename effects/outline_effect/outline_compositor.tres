@@ -24,6 +24,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("2_e276i")
 stencil_effect = SubResource("CompositorEffect_vsri0")
+stencil_reference = 25
 depth_threshold = 0.035
 normal_threshold = 0.25
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
@@ -60,6 +61,7 @@ needs_motion_vectors = false
 needs_normal_roughness = false
 script = ExtResource("2_e276i")
 stencil_effect = SubResource("CompositorEffect_vsri0")
+selected_only = true
 only_stencil = true
 metadata/_custom_type_script = "uid://c4y0db8ekqnpw"
 

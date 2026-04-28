@@ -3,9 +3,9 @@
 [ext_resource type="Environment" uid="uid://bfjush7w8wub" path="res://assets/world_environment.tres" id="1_7r2si"]
 [ext_resource type="Shader" uid="uid://b6ddxyv68vt61" path="res://assets/grid.gdshader" id="2_s5uh6"]
 [ext_resource type="Shader" uid="uid://ceap1cori15to" path="res://assets/toon_shading.gdshader" id="3_uk8lx"]
-[ext_resource type="Shader" uid="uid://bx2im4keidef8" path="res://assets/write_buffer.gdshader" id="4_s5uh6"]
 [ext_resource type="Texture2D" uid="uid://chptmk32p2njn" path="res://assets/godot_plush_model/godot_plush_albedo.png" id="4_xw6jf"]
 [ext_resource type="Texture2D" uid="uid://k6okhmvexu4f" path="res://assets/toon_color_ramp.tres" id="5_p060g"]
+[ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/outline_effect/stencil/stencil_data_material.gd" id="6_uk8lx"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_4x1ri"]
 render_priority = 0
@@ -47,9 +47,21 @@ shader_parameter/albedo_color = Color(1, 1, 1, 1)
 shader_parameter/albedo_texture = ExtResource("4_xw6jf")
 shader_parameter/color_ramp = ExtResource("5_p060g")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_s72gf"]
+[sub_resource type="Shader" id="Shader_uk8lx"]
+code = "shader_type spatial;
+stencil_mode write, 25;
+render_mode unshaded;
+
+void fragment() {
+    ALPHA = 0.0;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ihm2s"]
 render_priority = 0
-shader = ExtResource("4_s5uh6")
+shader = SubResource("Shader_uk8lx")
+script = ExtResource("6_uk8lx")
+id = 25
+metadata/_custom_type_script = "uid://ccet3t2xb5q04"
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tihls"]
 vertex_color_use_as_albedo = true
@@ -166,6 +178,23 @@ shader_parameter/use_albedo_texture = false
 shader_parameter/albedo_color = Color(1, 0, 0, 1)
 shader_parameter/color_ramp = ExtResource("5_p060g")
 
+[sub_resource type="Shader" id="Shader_p060g"]
+code = "shader_type spatial;
+stencil_mode write, 153;
+render_mode unshaded;
+
+void fragment() {
+    ALPHA = 0.0;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_uolsu"]
+render_priority = 0
+shader = SubResource("Shader_p060g")
+script = ExtResource("6_uk8lx")
+id = 25
+selected = true
+metadata/_custom_type_script = "uid://ccet3t2xb5q04"
+
 [sub_resource type="BoxMesh" id="BoxMesh_4x1ri"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_p060g"]
@@ -196,10 +225,6 @@ shader_parameter/use_albedo_texture = false
 shader_parameter/albedo_color = Color(1, 0, 1, 1)
 shader_parameter/color_ramp = ExtResource("5_p060g")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_vsri0"]
-render_priority = 0
-shader = ExtResource("4_s5uh6")
-
 [sub_resource type="TorusMesh" id="TorusMesh_xw6jf"]
 
 [node name="3D Samples" type="Node3D" unique_id=1926476177]
@@ -221,36 +246,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 [node name="GodotPlush" type="MeshInstance3D" parent="Node3D" unique_id=697354579]
 transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 0.99999994, 0, -1, 0)
 material_override = SubResource("ShaderMaterial_uk8lx")
-material_overlay = SubResource("ShaderMaterial_s72gf")
+material_overlay = SubResource("ShaderMaterial_ihm2s")
 mesh = SubResource("ArrayMesh_87yac")
 skin = SubResource("Skin_vee50")
 
 [node name="Cube" type="MeshInstance3D" parent="." unique_id=220645440]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 1, 1)
 material_override = SubResource("ShaderMaterial_xw6jf")
-material_overlay = SubResource("ShaderMaterial_s72gf")
+material_overlay = SubResource("ShaderMaterial_uolsu")
 mesh = SubResource("BoxMesh_4x1ri")
 
 [node name="Cube2" type="MeshInstance3D" parent="." unique_id=1043859046]
 transform = Transform3D(1, 0, 0, 0, 0.9999997, 0, 0, 0, 0.99999964, -1.88, 1.545, 0.975)
 material_override = SubResource("ShaderMaterial_xw6jf")
-material_overlay = SubResource("ShaderMaterial_s72gf")
+material_overlay = SubResource("ShaderMaterial_uolsu")
 mesh = SubResource("BoxMesh_p060g")
 
 [node name="Sphere" type="MeshInstance3D" parent="." unique_id=501850454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 1, 1)
 material_override = SubResource("ShaderMaterial_p060g")
-material_overlay = SubResource("ShaderMaterial_s72gf")
+material_overlay = SubResource("ShaderMaterial_uolsu")
 mesh = SubResource("SphereMesh_spab8")
 
 [node name="Cyllinder" type="MeshInstance3D" parent="." unique_id=1594716006]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, 1)
 material_override = SubResource("ShaderMaterial_m6xdg")
-material_overlay = SubResource("ShaderMaterial_s72gf")
+material_overlay = SubResource("ShaderMaterial_uolsu")
 mesh = SubResource("CylinderMesh_7r2si")
 
 [node name="Torus" type="MeshInstance3D" parent="." unique_id=2140150426]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1, 1)
 material_override = SubResource("ShaderMaterial_8cq4a")
-material_overlay = SubResource("ShaderMaterial_vsri0")
+material_overlay = SubResource("ShaderMaterial_uolsu")
 mesh = SubResource("TorusMesh_xw6jf")
