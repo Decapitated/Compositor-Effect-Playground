@@ -1,0 +1,16 @@
+[gd_resource type="Compositor" format=3 uid="uid://brpojbxn1tuo"]
+
+[ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://effects/stencil_effect/stencil/stencil.gd" id="1_n4vxl"]
+
+[sub_resource type="CompositorEffect" id="CompositorEffect_vsri0"]
+resource_local_to_scene = false
+resource_name = ""
+enabled = true
+effect_callback_type = 4
+needs_motion_vectors = false
+needs_normal_roughness = false
+script = ExtResource("1_n4vxl")
+metadata/_custom_type_script = "uid://jxepgw1atqhk"
+
+[resource]
+compositor_effects = Array[CompositorEffect]([SubResource("CompositorEffect_vsri0")])

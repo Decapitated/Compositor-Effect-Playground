@@ -1,0 +1,93 @@
+[gd_scene format=3 uid="uid://t0psi47mlhqb"]
+
+[ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_icrr1"]
+[ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/stencil_effect/stencil/stencil_data_material.gd" id="2_t4fne"]
+[ext_resource type="Compositor" uid="uid://brpojbxn1tuo" path="res://effects/stencil_effect/stencil/stencil_compositor.tres" id="3_we5pq"]
+[ext_resource type="Shader" uid="uid://dbnlofhlm121x" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test.gdshader" id="4_e5evh"]
+[ext_resource type="Script" uid="uid://cepr55o40owbc" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test.gd" id="5_6rdmq"]
+
+[sub_resource type="Shader" id="Shader_uk8lx"]
+code = "shader_type spatial;
+stencil_mode write, 25;
+render_mode unshaded;
+
+void fragment() {
+    ALPHA = 0.0;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_a07s0"]
+render_priority = 0
+shader = SubResource("Shader_uk8lx")
+script = ExtResource("2_t4fne")
+id = 25
+metadata/_custom_type_script = "uid://ccet3t2xb5q04"
+
+[sub_resource type="GDScript" id="GDScript_kf30h"]
+script/source = "extends Node3D
+
+@export_range(2.0, 10.0, 0.1, \"or_greater\") var duration: float = 4.0
+
+func _ready() -> void:
+	var tween = create_tween()
+	tween.tween_property(self, \"rotation:y\", PI/4.0, duration / 2.0)
+	tween.tween_property(self, \"rotation:y\", 0.0, duration / 2.0)
+	tween.tween_property(self, \"rotation:y\", -PI/4.0, duration / 2.0)
+	tween.tween_property(self, \"rotation:y\", 0.0, duration / 2.0)
+	tween.set_loops()
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yel7k"]
+shader = ExtResource("4_e5evh")
+
+[sub_resource type="LabelSettings" id="LabelSettings_whl02"]
+font_size = 32
+
+[sub_resource type="GDScript" id="GDScript_whl02"]
+script/source = "extends Label
+
+func _process(delta: float) -> void:
+	var stencil_test: StencilTest = get_parent()
+	position = stencil_test._cache_mouse_position
+	text = \"%s\" % stencil_test._cache_stencil_value
+"
+
+[node name="StencilEffect" type="Node3D" unique_id=1086573737]
+
+[node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_icrr1")]
+
+[node name="GodotPlush" parent="3D Samples/Node3D" parent_id_path=PackedInt32Array(1926476177, 1338691325) index="0" unique_id=697354579]
+material_overlay = SubResource("ShaderMaterial_a07s0")
+
+[node name="CamStand" type="Node3D" parent="." unique_id=134836692]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)
+script = SubResource("GDScript_kf30h")
+
+[node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=2045132986]
+transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.96592575, 0, 3, 0)
+compositor = ExtResource("3_we5pq")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2026267651]
+
+[node name="StencilTester" type="TextureRect" parent="CanvasLayer" unique_id=1761036251]
+material = SubResource("ShaderMaterial_yel7k")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("5_6rdmq")
+debug_stencil = true
+metadata/_custom_type_script = "uid://cepr55o40owbc"
+
+[node name="Label" type="Label" parent="CanvasLayer/StencilTester" unique_id=22713273]
+z_index = 2048
+layout_mode = 0
+offset_right = 214.0
+offset_bottom = 88.0
+offset_transform_enabled = true
+offset_transform_position = Vector2(8, 8)
+text = "cheese"
+label_settings = SubResource("LabelSettings_whl02")
+script = SubResource("GDScript_whl02")
+
+[editable path="3D Samples"]

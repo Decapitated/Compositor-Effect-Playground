@@ -1,6 +1,6 @@
 [gd_resource type="Compositor" format=3 uid="uid://bnen4hr4ibjrx"]
 
-[ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://effects/outline_effect/stencil/stencil.gd" id="1_yqmet"]
+[ext_resource type="Script" uid="uid://jxepgw1atqhk" path="res://effects/stencil_effect/stencil/stencil.gd" id="1_yqmet"]
 [ext_resource type="Script" uid="uid://c4y0db8ekqnpw" path="res://effects/outline_effect/extraction/extraction.gd" id="2_e276i"]
 [ext_resource type="Script" uid="uid://crv10gdfdqjmm" path="res://effects/outline_effect/jump_flood/jump_flood.gd" id="3_s58xd"]
 [ext_resource type="Script" uid="uid://uauh2w1q8ntw" path="res://effects/outline_effect/outline/outline.gd" id="4_d8u2q"]

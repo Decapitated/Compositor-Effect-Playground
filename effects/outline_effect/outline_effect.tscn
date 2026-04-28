@@ -1,10 +1,8 @@
 [gd_scene format=3 uid="uid://dpiycjyqn5ovj"]
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
-[ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/outline_effect/stencil/stencil_data_material.gd" id="2_whl02"]
+[ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/stencil_effect/stencil/stencil_data_material.gd" id="2_whl02"]
 [ext_resource type="Compositor" uid="uid://bnen4hr4ibjrx" path="res://effects/outline_effect/outline_compositor.tres" id="3_vxeov"]
-[ext_resource type="Script" uid="uid://cepr55o40owbc" path="res://effects/outline_effect/stencil/stencil_test/stencil_test.gd" id="4_whl02"]
-[ext_resource type="Shader" uid="uid://dbnlofhlm121x" path="res://effects/outline_effect/stencil/stencil_test/stencil_test.gdshader" id="4_yel7k"]
 
 [sub_resource type="Shader" id="Shader_uk8lx"]
 code = "shader_type spatial;
@@ -36,21 +34,6 @@ func _ready() -> void:
 	tween.set_loops()
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yel7k"]
-shader = ExtResource("4_yel7k")
-
-[sub_resource type="LabelSettings" id="LabelSettings_whl02"]
-font_size = 32
-
-[sub_resource type="GDScript" id="GDScript_whl02"]
-script/source = "extends Label
-
-func _process(delta: float) -> void:
-	var stencil_test: StencilTest = get_parent()
-	position = stencil_test._cache_mouse_position
-	text = \"%s\" % stencil_test._cache_stencil_value
-"
-
 [node name="OutlineEffect" type="Node3D" unique_id=1086573737]
 
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
@@ -65,29 +48,5 @@ script = SubResource("GDScript_kf30h")
 [node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=2045132986]
 transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.96592575, 0, 3, 0)
 compositor = ExtResource("3_vxeov")
-
-[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2026267651]
-
-[node name="StencilTester" type="Control" parent="CanvasLayer" unique_id=479595967]
-material = SubResource("ShaderMaterial_yel7k")
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("4_whl02")
-debug_stencil = true
-
-[node name="Label" type="Label" parent="CanvasLayer/StencilTester" unique_id=22713273]
-z_index = 2048
-layout_mode = 0
-offset_right = 214.0
-offset_bottom = 88.0
-offset_transform_enabled = true
-offset_transform_position = Vector2(8, 8)
-text = "cheese"
-label_settings = SubResource("LabelSettings_whl02")
-script = SubResource("GDScript_whl02")
 
 [editable path="3D Samples"]
