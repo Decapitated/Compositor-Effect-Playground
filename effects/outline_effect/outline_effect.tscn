@@ -1,8 +1,24 @@
 [gd_scene format=3 uid="uid://dpiycjyqn5ovj"]
 
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
-[ext_resource type="Script" uid="uid://dvsmwljbx0uwp" path="res://assets/rotate.gd" id="2_vsri0"]
+[ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/stencil_effect/stencil/stencil_data_material.gd" id="2_whl02"]
 [ext_resource type="Compositor" uid="uid://bnen4hr4ibjrx" path="res://effects/outline_effect/outline_compositor.tres" id="3_vxeov"]
+
+[sub_resource type="Shader" id="Shader_uk8lx"]
+code = "shader_type spatial;
+stencil_mode write, 25;
+render_mode unshaded;
+
+void fragment() {
+    ALPHA = 0.0;
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_a07s0"]
+render_priority = 0
+shader = SubResource("Shader_uk8lx")
+script = ExtResource("2_whl02")
+id = 25
+metadata/_custom_type_script = "uid://ccet3t2xb5q04"
 
 [sub_resource type="GDScript" id="GDScript_kf30h"]
 script/source = "extends Node3D
@@ -22,31 +38,8 @@ func _ready() -> void:
 
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
 
-[node name="DirectionalLight3D" parent="3D Samples/WorldEnvironment" parent_id_path=PackedInt32Array(1926476177, 793794692) index="0" unique_id=935803027]
-transform = Transform3D(0.7071067, 0.35355338, -0.61237234, 0, 0.8660254, 0.49999994, 0.7071067, -0.35355338, 0.61237234, 0, 0, 0)
-
-[node name="Node3D" parent="3D Samples" index="2" unique_id=1338691325]
-script = ExtResource("2_vsri0")
-
-[node name="GodotPlush" parent="3D Samples/Node3D" index="0" unique_id=697354579]
-transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 0.9999999, 0, -1, 0)
-
-[node name="Cube" parent="3D Samples" index="3" unique_id=220645440]
-script = ExtResource("2_vsri0")
-
-[node name="Cube2" parent="3D Samples" index="4" unique_id=1043859046]
-transform = Transform3D(-0.649448, 0.7499772, -0.12550318, 0, -0.1650476, -0.9862852, -0.7604059, -0.640541, 0.10718984, -1.41, 1.72, 1.05)
-script = ExtResource("2_vsri0")
-
-[node name="Sphere" parent="3D Samples" index="5" unique_id=501850454]
-script = ExtResource("2_vsri0")
-
-[node name="Cyllinder" parent="3D Samples" index="6" unique_id=1594716006]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 4, 1, 1)
-script = ExtResource("2_vsri0")
-
-[node name="Torus" parent="3D Samples" index="7" unique_id=2140150426]
-script = ExtResource("2_vsri0")
+[node name="GodotPlush" parent="3D Samples/Node3D" parent_id_path=PackedInt32Array(1926476177, 1338691325) index="0" unique_id=697354579]
+material_overlay = SubResource("ShaderMaterial_a07s0")
 
 [node name="CamStand" type="Node3D" parent="." unique_id=134836692]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5)

@@ -4,6 +4,8 @@ class_name ExtractionEffect extends CompositorEffect
 const SHADER_UID_PATH := "uid://fhn2s7b16iu3"
 
 @export var stencil_effect: StencilEffect
+@export_range(0, 255, 1) var stencil_reference: int = 123
+@export var selected_only: bool = false
 @export var only_stencil: bool = false
 @export_range(1, 10, 1, "or_greater") var scale := 1
 @export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold := 0.05
@@ -15,6 +17,7 @@ var _rd: RenderingDevice = null
 var _shader: RID
 var _pipeline: RID
 var _linear_sampler: RID
+var _nearest_sampler: RID
 
 var _texture_format: RDTextureFormat = RDTextureFormat.new()
 var _texture: RID
@@ -41,6 +44,11 @@ func _init() -> void:
     linear_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     _linear_sampler = _rd.sampler_create(linear_sampler_state)
+
+    var nearest_sampler_state: RDSamplerState = RDSamplerState.new()
+    nearest_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
+    nearest_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
+    _nearest_sampler = _rd.sampler_create(nearest_sampler_state)
 
     _shader_uid = ResourceLoader.get_resource_uid(SHADER_UID_PATH)
     _check_shader()
@@ -104,6 +112,8 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         depth_threshold,              # Depth Theshold               (4) (8)
         normal_threshold,             # Normal Threshold             (4) (12)
         float(only_stencil),          # Only Stencil                 (4) (16)
+        float(stencil_reference),     # Stencil Reference            (4) (20),
+        float(selected_only)          # Selected Only                (4) (24)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    
@@ -168,7 +178,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         var stencil_uniform := RDUniform.new()
         stencil_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
         stencil_uniform.binding = 4
-        stencil_uniform.add_id(_linear_sampler)
+        stencil_uniform.add_id(_nearest_sampler)
         stencil_uniform.add_id(stencil_effect.output_texture.texture_rd_rid)
         # Output Image
         var output_uniform := RDUniform.new()

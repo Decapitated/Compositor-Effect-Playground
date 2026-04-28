@@ -3,12 +3,10 @@ class_name StencilEffect extends CompositorEffect
 
 const SHADER_UID_PATH := "uid://6lcajx6boo2d"
 
-@export_range(0, 255, 1) var reference_value: int = 123
-
 var _rd: RenderingDevice = null
 
 var _shader: RID
-var _pipeline: RID
+var _pipelines: Array[RID]
 
 var _vertex_format : int
 var _vertex_buffer : RID
@@ -26,7 +24,6 @@ var output_texture: Texture2DRD = Texture2DRD.new()
 var _shader_uid: int = -1
 var _cache_depth_texture: RID
 var _cache_samples: int = 0
-var _cache_reference_value: int = 0
 
 enum CallbackError {
     OK = 0,
@@ -128,27 +125,30 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     elif error == CallbackError.INVALID_FRAMEBUFFER:
         error = CallbackError.OK
 
-    if framebuffer_format_changed || reference_value != _cache_reference_value:
-        _build_pipeline()
-    
-    if !_pipeline.is_valid():
-        if error != CallbackError.INVALID_PIPELINE:
-            error = CallbackError.INVALID_PIPELINE
-            push_error("Pipeline is invalid")
-        return
-    elif error == CallbackError.INVALID_PIPELINE:
-        error = CallbackError.OK
+    if framebuffer_format_changed:
+        _build_pipelines()
 
     var draw_list := _rd.draw_list_begin(
         _framebuffer,
         RenderingDevice.DRAW_CLEAR_COLOR_0,
         _clear_colors,
         1.0, 0, Rect2(),
-        RenderingDevice.OPAQUE_PASS
-    )
-    _rd.draw_list_bind_render_pipeline(draw_list, _pipeline)
-    _rd.draw_list_bind_vertex_array(draw_list, _vertex_array)
-    _rd.draw_list_draw(draw_list, false, 3)
+        RenderingDevice.OPAQUE_PASS)
+    for i in 8:
+        var pipeline := _pipelines[i]
+        if !pipeline.is_valid():
+            if error != CallbackError.INVALID_PIPELINE:
+                error = CallbackError.INVALID_PIPELINE
+                push_error("Pipeline is invalid")
+            return
+        elif error == CallbackError.INVALID_PIPELINE:
+            error = CallbackError.OK
+        _rd.draw_list_bind_render_pipeline(draw_list, pipeline)
+        _rd.draw_list_bind_vertex_array(draw_list, _vertex_array)
+        var bit: int = 1 << i
+        var push_data := PackedInt32Array([bit]).to_byte_array()
+        _rd.draw_list_set_push_constant(draw_list, push_data, push_data.size())
+        _rd.draw_list_draw(draw_list, false, 1)
     _rd.draw_list_end()
 
 func _on_resources_reimported(resource_paths: PackedStringArray) -> void:
@@ -163,7 +163,7 @@ func _check_shader() -> void:
         if _shader.is_valid():
             _rd.free_rid(_shader)
         _shader = new_shader
-        _build_pipeline()
+        _build_pipelines()
 
 func _build_shader() -> RID:
     print("Building stencil shader...")
@@ -208,44 +208,57 @@ func _build_framebuffer(samples: int) -> bool:
 
     return format_changed
 
-func _build_pipeline() -> void:
+func _build_pipelines() -> void:
+    # Free old pipelines
+    for pid in _pipelines:
+        if pid.is_valid():
+            _rd.free_rid(pid)
+    _pipelines.clear()
+
     var blend_state := RDPipelineColorBlendState.new()
     var blend_attachment := RDPipelineColorBlendStateAttachment.new()
+    blend_attachment.enable_blend = true
+    blend_attachment.src_color_blend_factor = RenderingDevice.BLEND_FACTOR_ONE
+    blend_attachment.dst_color_blend_factor = RenderingDevice.BLEND_FACTOR_ONE
+    blend_attachment.color_blend_op = RenderingDevice.BLEND_OP_ADD
     blend_state.attachments.append(blend_attachment)
 
-    var stencil_state := RDPipelineDepthStencilState.new()
-    stencil_state.enable_stencil = true
-    stencil_state.front_op_compare = RenderingDevice.COMPARE_OP_EQUAL
-    stencil_state.front_op_compare_mask = 0xFF
-    stencil_state.front_op_write_mask = 0
-    stencil_state.front_op_reference = reference_value
-    stencil_state.front_op_fail = RenderingDevice.STENCIL_OP_KEEP
-    stencil_state.front_op_pass = RenderingDevice.STENCIL_OP_KEEP
+    for i in 8:
+        var bit: int = 1 << i
+        var stencil_state := RDPipelineDepthStencilState.new()
+        stencil_state.enable_stencil = true
+        stencil_state.front_op_compare = RenderingDevice.COMPARE_OP_EQUAL
+        stencil_state.front_op_compare_mask = bit
+        stencil_state.front_op_write_mask = 0
+        stencil_state.front_op_reference = bit
+        stencil_state.front_op_fail = RenderingDevice.STENCIL_OP_KEEP
+        stencil_state.front_op_pass = RenderingDevice.STENCIL_OP_KEEP
 
-    _cache_reference_value = reference_value
-
-    _pipeline = _rd.render_pipeline_create(
-        _shader,
-        _framebuffer_format,
-        _vertex_format,
-        RenderingDevice.RENDER_PRIMITIVE_TRIANGLES,
-        RDPipelineRasterizationState.new(),
-        RDPipelineMultisampleState.new(),
-        stencil_state,
-        blend_state
-    )
+        var pipeline = _rd.render_pipeline_create(
+            _shader,
+            _framebuffer_format,
+            _vertex_format,
+            RenderingDevice.RENDER_PRIMITIVE_TRIANGLES,
+            RDPipelineRasterizationState.new(),
+            RDPipelineMultisampleState.new(),
+            stencil_state,
+            blend_state
+        )
+        _pipelines.append(pipeline)
 
 func _create_output_texture(width: int, height: int, samples: int) -> void:
     _texture_format = RDTextureFormat.new()
     _texture_format.width = width
     _texture_format.height = height
-    _texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT
+    _texture_format.format = RenderingDevice.DATA_FORMAT_R32_SFLOAT
     _texture_format.samples = samples as RenderingDevice.TextureSamples
     _texture_format.usage_bits = \
         RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
         RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
         RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
-        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
+        RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT | \
+        RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 
     var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
     output_texture.texture_rd_rid = new_texture

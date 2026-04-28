@@ -1,6 +1,7 @@
 #[vertex]
 #version 450 core
 
+
 layout(location = 0) in vec3 vertex_attribute;
 
 void main()
@@ -11,8 +12,12 @@ void main()
 #[fragment]
 #version 450 core
 
-layout (location = 0) out vec4 frag_color;
+layout(push_constant, std430) uniform PushConstant {
+    int stencil_ref;
+} pc;
+
+layout(location = 0) out float stencil;
 
 void main() {
-    frag_color.rgba = vec4(1.0);
+    stencil = pc.stencil_ref;
 }

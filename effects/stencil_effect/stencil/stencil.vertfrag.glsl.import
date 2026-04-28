@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://6lcajx6boo2d"
+path="res://.godot/imported/stencil.vertfrag.glsl-e0f01a91be41e91801415b6f7d7123ff.res"
+
+[deps]
+
+source_file="res://effects/stencil_effect/stencil/stencil.vertfrag.glsl"
+dest_files=["res://.godot/imported/stencil.vertfrag.glsl-e0f01a91be41e91801415b6f7d7123ff.res"]
+
+[params]
+

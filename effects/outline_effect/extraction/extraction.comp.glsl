@@ -8,6 +8,9 @@
 // "Virtually" talked about here: https://github.com/godotengine/godot-proposals/issues/8366#issuecomment-1800249408
 #include "godot/scene_data_inc.glsl"
 
+// Stencil Utilities
+#include "uid://by0bul640m30r"
+
 // Invocations in the (x, y, z) dimension.
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
@@ -33,6 +36,8 @@ layout(push_constant, std430) uniform Params {
     float depth_threshold;
     float normal_threshold;
     float only_stencil;
+    float stencil_ref;
+    float selected_only;
 }
 params;
 
@@ -108,8 +113,17 @@ float sample_normal(vec2 uv, vec2 texel_size) {
     return edgeNormal;
 }
 
+int get_stencil_(vec2 uv) {
+    return int(round(texture(stencil_texture, uv).r));
+}
+
+StencilData get_stencil_data(vec2 uv) {
+    return extract_stencil_data(get_stencil_(uv));
+}
+
 float get_stencil(vec2 uv) {
-    return texture(stencil_texture, uv).r;
+    StencilData data = get_stencil_data(uv);
+    return float((bool(params.selected_only) && data.selected) || (!bool(params.selected_only) && params.stencil_ref != 0 && data.id == params.stencil_ref));
 }
 
 float sample_stencil(vec2 uv, vec2 texel_size) {
@@ -134,6 +148,12 @@ float sample_stencil(vec2 uv, vec2 texel_size) {
     return edgeStencil;
 }
 
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 // The code we want to execute in each invocation.
 void main() {
     ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
@@ -151,7 +171,7 @@ void main() {
     vec4 color = vec4(vec3(0.0), 1.0);
     float stencil = get_stencil(uv_norm);
     if(only_stencil) {
-        color.rgb = vec3(stencil);
+        color.rgb = vec3(0.0, 0.0, stencil);
     } else {
         vec4 normal = get_normal(uv_norm);
 
