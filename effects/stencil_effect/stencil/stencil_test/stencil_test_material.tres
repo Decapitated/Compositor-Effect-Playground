@@ -1,8 +1,0 @@
-[gd_resource type="ShaderMaterial" format=3 uid="uid://cf53vdwcmlqi8"]
-
-[ext_resource type="Shader" uid="uid://dbnlofhlm121x" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test.gdshader" id="1_a54n0"]
-[ext_resource type="Texture2D" uid="uid://bj28kyjcns16j" path="res://effects/stencil_effect/stencil/stencil_test/codepage12.png" id="2_pk7mp"]
-
-[resource]
-shader = ExtResource("1_a54n0")
-shader_parameter/codepage = ExtResource("2_pk7mp")

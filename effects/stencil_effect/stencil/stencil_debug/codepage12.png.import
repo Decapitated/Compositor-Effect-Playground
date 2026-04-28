@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bj28kyjcns16j"
-path="res://.godot/imported/codepage12.png-ff9d4dcc1fd3fb256a03997a2949a3fd.ctex"
+path="res://.godot/imported/codepage12.png-71f2a4955323921350e546af63bf46be.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://effects/stencil_effect/stencil/stencil_test/codepage12.png"
-dest_files=["res://.godot/imported/codepage12.png-ff9d4dcc1fd3fb256a03997a2949a3fd.ctex"]
+source_file="res://effects/stencil_effect/stencil/stencil_debug/codepage12.png"
+dest_files=["res://.godot/imported/codepage12.png-71f2a4955323921350e546af63bf46be.ctex"]
 
 [params]
 

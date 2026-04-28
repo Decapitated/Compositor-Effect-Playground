@@ -3,8 +3,9 @@
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_icrr1"]
 [ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/stencil_effect/stencil/stencil_data_material.gd" id="2_t4fne"]
 [ext_resource type="Compositor" uid="uid://brpojbxn1tuo" path="res://effects/stencil_effect/stencil/stencil_compositor.tres" id="3_we5pq"]
-[ext_resource type="Material" uid="uid://cf53vdwcmlqi8" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test_material.tres" id="4_we5pq"]
-[ext_resource type="Script" uid="uid://cepr55o40owbc" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test.gd" id="5_6rdmq"]
+[ext_resource type="Material" uid="uid://cf53vdwcmlqi8" path="res://effects/stencil_effect/stencil/stencil_debug/stencil_debug_material.tres" id="4_we5pq"]
+[ext_resource type="Script" uid="uid://cepr55o40owbc" path="res://effects/stencil_effect/stencil/stencil_debug/stencil_debug.gd" id="5_6rdmq"]
+[ext_resource type="Script" uid="uid://c51nwlj5eoc3v" path="res://effects/stencil_effect/stencil/stencil_debug/stencil_debug_label.gd" id="6_hylwh"]
 
 [sub_resource type="Shader" id="Shader_uk8lx"]
 code = "shader_type spatial;
@@ -76,15 +77,6 @@ metadata/_custom_type_script = "uid://ccet3t2xb5q04"
 [sub_resource type="LabelSettings" id="LabelSettings_whl02"]
 font_size = 32
 
-[sub_resource type="GDScript" id="GDScript_whl02"]
-script/source = "extends Label
-
-func _process(delta: float) -> void:
-	var stencil_test: StencilTest = get_parent()
-	position = stencil_test._cache_mouse_position
-	text = \"%s\" % stencil_test._cache_stencil_value
-"
-
 [node name="StencilEffect" type="Node3D" unique_id=1086573737]
 
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_icrr1")]
@@ -110,7 +102,7 @@ compositor = ExtResource("3_we5pq")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2026267651]
 
-[node name="StencilTester" type="TextureRect" parent="CanvasLayer" unique_id=1761036251]
+[node name="StencilDebug" type="TextureRect" parent="CanvasLayer" unique_id=1761036251]
 self_modulate = Color(1, 1, 1, 0.666)
 material = ExtResource("4_we5pq")
 anchors_preset = 15
@@ -122,7 +114,7 @@ script = ExtResource("5_6rdmq")
 debug_stencil = true
 metadata/_custom_type_script = "uid://cepr55o40owbc"
 
-[node name="Label" type="Label" parent="CanvasLayer/StencilTester" unique_id=22713273]
+[node name="Label" type="Label" parent="CanvasLayer/StencilDebug" unique_id=22713273]
 z_index = 2048
 layout_mode = 0
 offset_right = 214.0
@@ -131,6 +123,6 @@ offset_transform_enabled = true
 offset_transform_position = Vector2(8, 8)
 text = "cheese"
 label_settings = SubResource("LabelSettings_whl02")
-script = SubResource("GDScript_whl02")
+script = ExtResource("6_hylwh")
 
 [editable path="3D Samples"]

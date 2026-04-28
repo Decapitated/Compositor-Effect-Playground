@@ -1,5 +1,5 @@
 @tool
-class_name StencilTest extends TextureRect
+class_name StencilDebug extends TextureRect
 
 @export var debug_stencil: bool = false
 
