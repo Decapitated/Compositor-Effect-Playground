@@ -75,5 +75,5 @@ void fragment() {
 	}
     
     // Output
-    COLOR = vec4(color, float(bool(stencil)));
+    COLOR = vec4(color, float(bool(stencil)) * COLOR.a);
 }
