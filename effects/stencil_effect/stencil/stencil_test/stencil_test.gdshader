@@ -30,59 +30,50 @@ vec2 mapToChar(vec2 CharUV, int AsciiVal) {
 
 void fragment() {
 	int stencil = int(texture(TEXTURE, UV).r);
-	
-	// --- Step A: Tiling Logic ---
-    // Number of number-tiles across the screen
-    float numTiles = 25.0; 
-    vec2 tiledUV = UV * numTiles;
-    // Separate into integer grid-cell ID and normalized UV inside that cell
-    vec2 cellID = floor(tiledUV);
-    vec2 cellUV = fract(tiledUV); 
-
-    // --- Step B: Digit Selection Logic ---
-    // We need 3 slots: [Hundreds] [Tens] [Ones]
-    int numDigits = 3;
-    float currentDigitPosition = floor(cellUV.x * float(numDigits));
-    
-    // --- Step C: Math out the digits 0-255 ---
-    int hundredDigit = (stencil / 100) % 10;
-    int tenDigit     = (stencil / 10) % 10;
-    int oneDigit     = stencil % 10;
-    
-    // Map the position inside the tile to the correct mathematical digit
-    int selectedCharAscii = int(char_0_offset); // Default '0'
-    
-    // Check which slot this pixel belongs to:
-    if (currentDigitPosition == 0.0) {
-        selectedCharAscii += hundredDigit;
-    } else if (currentDigitPosition == 1.0) {
-        selectedCharAscii += tenDigit;
-    } else {
-        selectedCharAscii += oneDigit;
-    }
-    
-    // --- Step D: Recalculate UVs inside the single digit slot ---
-    vec2 finalDigitUV = fract(vec2(cellUV.x * float(numDigits), cellUV.y));
-
-    // --- Step E: Sample Texture ---
-    vec2 finalAtlasUV = mapToChar(finalDigitUV, selectedCharAscii);
-    
-    // Assuming codepage12 is in iChannel0
-    // Standard codepage12 usually only uses the RED channel
-    vec4 tex = texture(codepage, finalAtlasUV);
-    float textShape = tex.r;
-
-    // Optional: Add some color or background
 	vec3 stencil_color = hsv2rgb(vec3(float(stencil) / 255.0, 1.0, 1.0));
-	vec3 text_color = vec3(0.0);
-    vec3 col = mix(stencil_color, text_color, textShape);
+	vec3 text_color = vec3(1.0);
+	vec3 highlight_color = vec3(0.0);
+	vec3 background_color = stencil_color;
+	
+	vec3 color = background_color;
+	
+    int numDigits = 10;
+    vec2 tiledUV = SCREEN_UV / SCREEN_PIXEL_SIZE * 0.005;
+	tiledUV *= vec2(1.0, float(numDigits));
+	
+    vec2 cellID = floor(tiledUV);
+	vec2 cellUV = fract(tiledUV + vec2(float(cellID.y)*0.333, 0.0));
+	
+	vec2 mod_uv = vec2(mod(cellUV.x * float(numDigits), 1.0), cellUV.y);
+	//color = vec3(mod_uv, 0.0);
+	if(mod(cellID.y, 4.0) == 0.0) {
+	    float currentDigitPosition = floor(cellUV.x * float(numDigits));
+	    
+	    // --- Step C: Math out the digits 0-255 ---
+	    int hundredDigit = (stencil / 100) % 10;
+	    int tenDigit     = (stencil / 10) % 10;
+	    int oneDigit     = stencil % 10;
+	    
+	    // Map the position inside the tile to the correct mathematical digit
+	    int selectedCharAscii = int(char_0_offset); // Default '0'
+	    
+		if(currentDigitPosition < 3.0) {
+			// Check which slot this pixel belongs to:
+		    if (currentDigitPosition == 0.0) {
+		        selectedCharAscii += hundredDigit;
+		    } else if (currentDigitPosition == 1.0) {
+		        selectedCharAscii += tenDigit;
+		    } else {
+		        selectedCharAscii += oneDigit;
+		    }
+
+		    vec2 charUV = mapToChar(mod_uv, selectedCharAscii);
+		    float textShape = texture(codepage, charUV).r;
+
+		    color = mix(highlight_color, text_color, textShape);
+		}
+	}
     
     // Output
-    COLOR = vec4(col, float(bool(stencil)));
+    COLOR = vec4(color, float(bool(stencil)));
 }
-
-//void fragment() {
-	//int stencil = int(texture(TEXTURE, UV).r);
-	//vec3 stencil_color = hsv2rgb(vec3(float(stencil) / 255.0, 1.0, 1.0));
-	//COLOR = vec4(stencil_color, float(bool(stencil)));
-//}
