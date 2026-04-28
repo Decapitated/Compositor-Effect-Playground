@@ -4,6 +4,7 @@ class_name ExtractionEffect extends CompositorEffect
 const SHADER_UID_PATH := "uid://fhn2s7b16iu3"
 
 @export var stencil_effect: StencilEffect
+@export_range(0, 255, 1) var stencil_reference: int = 123
 @export var only_stencil: bool = false
 @export_range(1, 10, 1, "or_greater") var scale := 1
 @export_range(0.0, 10.0, 0.001, "or_greater") var depth_threshold := 0.05
@@ -110,6 +111,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         depth_threshold,              # Depth Theshold               (4) (8)
         normal_threshold,             # Normal Threshold             (4) (12)
         float(only_stencil),          # Only Stencil                 (4) (16)
+        float(stencil_reference),     # Stencil Reference            (4) (20)
     ])
     var scene_data_uniform_buffer: RID = scene_data.get_uniform_buffer()
     # Run compute for each view.    

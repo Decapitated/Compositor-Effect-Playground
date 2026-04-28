@@ -33,6 +33,7 @@ layout(push_constant, std430) uniform Params {
     float depth_threshold;
     float normal_threshold;
     float only_stencil;
+    float stencil_ref;
 }
 params;
 
@@ -113,7 +114,7 @@ int get_stencil_(vec2 uv) {
 }
 
 float get_stencil(vec2 uv) {
-    return float(get_stencil_(uv) == 69);
+    return float(get_stencil_(uv) == params.stencil_ref);
 }
 
 float sample_stencil(vec2 uv, vec2 texel_size) {
