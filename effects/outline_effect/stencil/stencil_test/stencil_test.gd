@@ -16,6 +16,7 @@ func _ready() -> void:
 		if effect is StencilEffect:
 			_stencil_effect = effect
 			break
+	queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
 	if _stencil_effect:
