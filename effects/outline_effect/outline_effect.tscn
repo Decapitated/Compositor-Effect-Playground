@@ -120,8 +120,9 @@ compositor = ExtResource("3_vxeov")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2026267651]
 
-[node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=1818603519]
+[node name="StencilTester" type="Control" parent="CanvasLayer" unique_id=479595967]
 material = SubResource("ShaderMaterial_yel7k")
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -129,11 +130,11 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_whl02")
 
-[node name="Label" type="Label" parent="CanvasLayer/TextureRect" unique_id=22713273]
+[node name="Label" type="Label" parent="CanvasLayer/StencilTester" unique_id=22713273]
 z_index = 2048
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+offset_right = 214.0
+offset_bottom = 88.0
 text = "cheese"
 label_settings = SubResource("LabelSettings_whl02")
 script = SubResource("GDScript_whl02")

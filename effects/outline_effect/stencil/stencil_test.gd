@@ -1,4 +1,4 @@
-class_name StencilTest extends TextureRect
+class_name StencilTest extends Control
 
 var _stencil_effect: StencilEffect
 var _cache_stencil_value: float = 0.0
@@ -9,7 +9,6 @@ func _ready() -> void:
 	for effect in effects:
 		if effect is StencilEffect:
 			_stencil_effect = effect
-			texture = effect.output_texture
 			break
 
 func _gui_input(event: InputEvent) -> void:
