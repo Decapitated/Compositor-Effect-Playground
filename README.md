@@ -1,6 +1,21 @@
 # Compositor Effect Playground
 A Godot project for playing around with compositor effects.
 
+<details>
+<summary><b>Benchmarks</b></summary>
+
+These benchmarks are rough estimates pulled from the Visual Debugger.
+
+| Effect | Time |
+|-|-|
+| Stencil | ~0.03ms |
+| Extraction | ~0.06ms |
+| Jump Flood | ~0.5ms |
+| Outline | ~0.02ms |
+| Panini Projection | ~0.12ms |
+
+</details>
+
 ## Stencil Buffer Texture
 <img src="docs/stencil.png">
 
@@ -35,6 +50,7 @@ Currently, Godot does not expose the stencil buffer to be sampled.
 | <img src="docs/panini_before.png"> | <img src="docs/panini_after.png"> |
 > FOV = 130°<br>
 > FSR 2.0 → Scaling = 2.0
+
 
 ## Project References
 
