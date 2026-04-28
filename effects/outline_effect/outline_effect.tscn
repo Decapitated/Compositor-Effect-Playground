@@ -59,6 +59,11 @@ func _process(delta: float) -> void:
 	text = \"%s\" % stencil_test._cache_stencil_value
 "
 
+[sub_resource type="BoxMesh" id="BoxMesh_yel7k"]
+size = Vector3(14.132568, 7.3496094, 0.64160156)
+
+[sub_resource type="SphereMesh" id="SphereMesh_a07s0"]
+
 [node name="OutlineEffect" type="Node3D" unique_id=1086573737]
 
 [node name="3D Samples" parent="." unique_id=1926476177 instance=ExtResource("1_kf30h")]
@@ -119,5 +124,13 @@ offset_bottom = 88.0
 text = "cheese"
 label_settings = SubResource("LabelSettings_whl02")
 script = SubResource("GDScript_whl02")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1437102645]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+mesh = SubResource("BoxMesh_yel7k")
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="." unique_id=1426934999]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -2)
+mesh = SubResource("SphereMesh_a07s0")
 
 [editable path="3D Samples"]
