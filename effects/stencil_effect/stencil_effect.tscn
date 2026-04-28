@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_icrr1"]
 [ext_resource type="Script" uid="uid://ccet3t2xb5q04" path="res://effects/stencil_effect/stencil/stencil_data_material.gd" id="2_t4fne"]
 [ext_resource type="Compositor" uid="uid://brpojbxn1tuo" path="res://effects/stencil_effect/stencil/stencil_compositor.tres" id="3_we5pq"]
-[ext_resource type="Shader" uid="uid://dbnlofhlm121x" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test.gdshader" id="4_e5evh"]
+[ext_resource type="Material" uid="uid://cf53vdwcmlqi8" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test_material.tres" id="4_we5pq"]
 [ext_resource type="Script" uid="uid://cepr55o40owbc" path="res://effects/stencil_effect/stencil/stencil_test/stencil_test.gd" id="5_6rdmq"]
 
 [sub_resource type="Shader" id="Shader_uk8lx"]
@@ -36,9 +36,6 @@ func _ready() -> void:
 	tween.set_loops()
 "
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_yel7k"]
-shader = ExtResource("4_e5evh")
-
 [sub_resource type="LabelSettings" id="LabelSettings_whl02"]
 font_size = 32
 
@@ -69,7 +66,7 @@ compositor = ExtResource("3_we5pq")
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2026267651]
 
 [node name="StencilTester" type="TextureRect" parent="CanvasLayer" unique_id=1761036251]
-material = SubResource("ShaderMaterial_yel7k")
+material = ExtResource("4_we5pq")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
