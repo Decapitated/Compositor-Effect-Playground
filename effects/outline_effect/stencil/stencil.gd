@@ -3,15 +3,10 @@ class_name StencilEffect extends CompositorEffect
 
 const SHADER_UID_PATH := "uid://6lcajx6boo2d"
 
-@export var reference_values: Array[int] = [123]:
-    set(value):
-        reference_values = value.filter(func(val):
-            return val >= 0 && val <= 255)
-
 var _rd: RenderingDevice = null
 
 var _shader: RID
-var _pipelines: Dictionary[int, RID] = {}
+var _pipelines: Array[RID]
 
 var _vertex_format : int
 var _vertex_buffer : RID
@@ -29,7 +24,6 @@ var output_texture: Texture2DRD = Texture2DRD.new()
 var _shader_uid: int = -1
 var _cache_depth_texture: RID
 var _cache_samples: int = 0
-var _cache_reference_values: Array[int] = []
 
 enum CallbackError {
     OK = 0,
@@ -131,7 +125,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
     elif error == CallbackError.INVALID_FRAMEBUFFER:
         error = CallbackError.OK
 
-    if framebuffer_format_changed || reference_values != _cache_reference_values:
+    if framebuffer_format_changed:
         _build_pipelines()
 
     var draw_list := _rd.draw_list_begin(
@@ -139,10 +133,9 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         RenderingDevice.DRAW_CLEAR_COLOR_0,
         _clear_colors,
         1.0, 0, Rect2(),
-        RenderingDevice.OPAQUE_PASS
-    )
-    for ref_val in _pipelines.keys():
-        var pipeline := _pipelines[ref_val]
+        RenderingDevice.OPAQUE_PASS)
+    for i in 8:
+        var pipeline := _pipelines[i]
         if !pipeline.is_valid():
             if error != CallbackError.INVALID_PIPELINE:
                 error = CallbackError.INVALID_PIPELINE
@@ -152,9 +145,11 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
             error = CallbackError.OK
         _rd.draw_list_bind_render_pipeline(draw_list, pipeline)
         _rd.draw_list_bind_vertex_array(draw_list, _vertex_array)
-        _rd.draw_list_draw(draw_list, false, 3)
+        var bit: int = 1 << i
+        var push_data := PackedInt32Array([bit]).to_byte_array()
+        _rd.draw_list_set_push_constant(draw_list, push_data, push_data.size())
+        _rd.draw_list_draw(draw_list, false, 1)
     _rd.draw_list_end()
-    _cache_reference_values = reference_values.duplicate()
 
 func _on_resources_reimported(resource_paths: PackedStringArray) -> void:
     for path in resource_paths:
@@ -215,7 +210,7 @@ func _build_framebuffer(samples: int) -> bool:
 
 func _build_pipelines() -> void:
     # Free old pipelines
-    for pid in _pipelines.values():
+    for pid in _pipelines:
         if pid.is_valid():
             _rd.free_rid(pid)
     _pipelines.clear()
@@ -225,17 +220,17 @@ func _build_pipelines() -> void:
     blend_attachment.enable_blend = true
     blend_attachment.src_color_blend_factor = RenderingDevice.BLEND_FACTOR_ONE
     blend_attachment.dst_color_blend_factor = RenderingDevice.BLEND_FACTOR_ONE
+    blend_attachment.color_blend_op = RenderingDevice.BLEND_OP_ADD
     blend_state.attachments.append(blend_attachment)
 
-    for ref_val in reference_values:
-        if ref_val < 0 || ref_val > 255:
-            continue
+    for i in 8:
+        var bit: int = 1 << i
         var stencil_state := RDPipelineDepthStencilState.new()
         stencil_state.enable_stencil = true
         stencil_state.front_op_compare = RenderingDevice.COMPARE_OP_EQUAL
-        stencil_state.front_op_compare_mask = 0xFF
+        stencil_state.front_op_compare_mask = bit
         stencil_state.front_op_write_mask = 0
-        stencil_state.front_op_reference = ref_val
+        stencil_state.front_op_reference = bit
         stencil_state.front_op_fail = RenderingDevice.STENCIL_OP_KEEP
         stencil_state.front_op_pass = RenderingDevice.STENCIL_OP_KEEP
 
@@ -249,19 +244,21 @@ func _build_pipelines() -> void:
             stencil_state,
             blend_state
         )
-        _pipelines[ref_val] = pipeline
+        _pipelines.append(pipeline)
 
 func _create_output_texture(width: int, height: int, samples: int) -> void:
     _texture_format = RDTextureFormat.new()
     _texture_format.width = width
     _texture_format.height = height
-    _texture_format.format = RenderingDevice.DATA_FORMAT_R32G32B32A32_SFLOAT
+    _texture_format.format = RenderingDevice.DATA_FORMAT_R32_SFLOAT
     _texture_format.samples = samples as RenderingDevice.TextureSamples
     _texture_format.usage_bits = \
         RenderingDevice.TEXTURE_USAGE_INPUT_ATTACHMENT_BIT | \
         RenderingDevice.TEXTURE_USAGE_STORAGE_BIT  | \
         RenderingDevice.TEXTURE_USAGE_COLOR_ATTACHMENT_BIT | \
-        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT
+        RenderingDevice.TEXTURE_USAGE_SAMPLING_BIT | \
+        RenderingDevice.TEXTURE_USAGE_CAN_COPY_TO_BIT | \
+        RenderingDevice.TEXTURE_USAGE_CAN_COPY_FROM_BIT
 
     var new_texture := _rd.texture_create(_texture_format, RDTextureView.new())
     output_texture.texture_rd_rid = new_texture
