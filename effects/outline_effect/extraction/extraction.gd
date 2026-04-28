@@ -15,6 +15,7 @@ var _rd: RenderingDevice = null
 var _shader: RID
 var _pipeline: RID
 var _linear_sampler: RID
+var _nearest_sampler: RID
 
 var _texture_format: RDTextureFormat = RDTextureFormat.new()
 var _texture: RID
@@ -41,6 +42,11 @@ func _init() -> void:
     linear_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     linear_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_LINEAR
     _linear_sampler = _rd.sampler_create(linear_sampler_state)
+
+    var nearest_sampler_state: RDSamplerState = RDSamplerState.new()
+    nearest_sampler_state.min_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
+    nearest_sampler_state.mag_filter = RenderingDevice.SAMPLER_FILTER_NEAREST
+    _nearest_sampler = _rd.sampler_create(nearest_sampler_state)
 
     _shader_uid = ResourceLoader.get_resource_uid(SHADER_UID_PATH)
     _check_shader()
@@ -168,7 +174,7 @@ func _render_callback(_effect_callback_type: int, render_data: RenderData) -> vo
         var stencil_uniform := RDUniform.new()
         stencil_uniform.uniform_type = RenderingDevice.UNIFORM_TYPE_SAMPLER_WITH_TEXTURE
         stencil_uniform.binding = 4
-        stencil_uniform.add_id(_linear_sampler)
+        stencil_uniform.add_id(_nearest_sampler)
         stencil_uniform.add_id(stencil_effect.output_texture.texture_rd_rid)
         # Output Image
         var output_uniform := RDUniform.new()

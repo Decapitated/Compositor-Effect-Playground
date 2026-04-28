@@ -3,6 +3,35 @@
 [ext_resource type="PackedScene" uid="uid://cbuobna264clf" path="res://prefabs/3d_samples.tscn" id="1_kf30h"]
 [ext_resource type="Script" uid="uid://dvsmwljbx0uwp" path="res://assets/rotate.gd" id="2_vsri0"]
 [ext_resource type="Compositor" uid="uid://bnen4hr4ibjrx" path="res://effects/outline_effect/outline_compositor.tres" id="3_vxeov"]
+[ext_resource type="Script" uid="uid://cepr55o40owbc" path="res://effects/outline_effect/stencil/stencil_test.gd" id="4_whl02"]
+
+[sub_resource type="Shader" id="Shader_25gda"]
+code = "shader_type spatial;
+stencil_mode write, 69;
+render_mode unshaded;
+
+void fragment() {
+	ALPHA = 0.0;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_whl02"]
+render_priority = 0
+shader = SubResource("Shader_25gda")
+
+[sub_resource type="Shader" id="Shader_yel7k"]
+code = "shader_type spatial;
+stencil_mode write, 255;
+render_mode unshaded;
+
+void fragment() {
+	ALPHA = 0.0;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_a07s0"]
+render_priority = 0
+shader = SubResource("Shader_yel7k")
 
 [sub_resource type="GDScript" id="GDScript_kf30h"]
 script/source = "extends Node3D
@@ -16,6 +45,37 @@ func _ready() -> void:
 	tween.tween_property(self, \"rotation:y\", -PI/4.0, duration / 2.0)
 	tween.tween_property(self, \"rotation:y\", 0.0, duration / 2.0)
 	tween.set_loops()
+"
+
+[sub_resource type="Shader" id="Shader_whl02"]
+code = "shader_type canvas_item;
+
+vec3 hsv2rgb(vec3 c) {
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+void fragment() {
+	int stencil = int(texture(TEXTURE, UV).r);
+	vec3 stencil_color = hsv2rgb(vec3(float(stencil) / 255.0, 1.0, 1.0));
+	COLOR = vec4(stencil_color, float(bool(stencil)));
+}
+"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yel7k"]
+shader = SubResource("Shader_whl02")
+
+[sub_resource type="LabelSettings" id="LabelSettings_whl02"]
+font_size = 64
+
+[sub_resource type="GDScript" id="GDScript_whl02"]
+script/source = "extends Label
+
+func _process(delta: float) -> void:
+	var stencil_test: StencilTest = get_parent()
+	position = stencil_test._cache_mouse_position
+	text = \"%s\" % stencil_test._cache_stencil_value
 "
 
 [node name="OutlineEffect" type="Node3D" unique_id=1086573737]
@@ -32,6 +92,7 @@ script = ExtResource("2_vsri0")
 transform = Transform3D(0.9999999, 0, 0, 0, 1, 0, 0, 0, 0.9999999, 0, -1, 0)
 
 [node name="Cube" parent="3D Samples" index="3" unique_id=220645440]
+material_overlay = SubResource("ShaderMaterial_whl02")
 script = ExtResource("2_vsri0")
 
 [node name="Cube2" parent="3D Samples" index="4" unique_id=1043859046]
@@ -39,6 +100,7 @@ transform = Transform3D(-0.649448, 0.7499772, -0.12550318, 0, -0.1650476, -0.986
 script = ExtResource("2_vsri0")
 
 [node name="Sphere" parent="3D Samples" index="5" unique_id=501850454]
+material_overlay = SubResource("ShaderMaterial_a07s0")
 script = ExtResource("2_vsri0")
 
 [node name="Cyllinder" parent="3D Samples" index="6" unique_id=1594716006]
@@ -55,5 +117,25 @@ script = SubResource("GDScript_kf30h")
 [node name="Camera3D" type="Camera3D" parent="CamStand" unique_id=2045132986]
 transform = Transform3D(1, 0, 0, 0, 0.96592575, 0.258819, 0, -0.258819, 0.96592575, 0, 3, 0)
 compositor = ExtResource("3_vxeov")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=2026267651]
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer" unique_id=1818603519]
+material = SubResource("ShaderMaterial_yel7k")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_whl02")
+
+[node name="Label" type="Label" parent="CanvasLayer/TextureRect" unique_id=22713273]
+z_index = 2048
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "cheese"
+label_settings = SubResource("LabelSettings_whl02")
+script = SubResource("GDScript_whl02")
 
 [editable path="3D Samples"]
