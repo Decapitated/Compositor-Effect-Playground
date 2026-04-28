@@ -1,8 +1,15 @@
 # Compositor Effect Playground
 A Godot project for playing around with compositor effects.
 
-## Stencil
+## Stencil Buffer Texture
 <img src="docs/stencil.png">
+
+Currently, Godot does not expose the stencil buffer to be sampled.
+
+* `StencilEffect` works around this with 8 render passes - one per bit.
+* Each pass sets `compare_mask = reference = (1 << i)` with `COMPARE_OP_EQUAL`, isolating that bit as the pass condition.
+* Passing pixels write `(1 << i)` as a float into the output texture
+* Additive blending (`ONE + ONE, BLEND_OP_ADD`) accumulates all 8 passes into the final `[0-255]` output.
 
 #### References
 | Link | Description |
