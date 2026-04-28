@@ -1,6 +1,9 @@
 # Compositor Effect Playground
 A Godot project for playing around with compositor effects.
 
+## Stencil
+<img src="docs/stencil.png">
+
 ## Outlines
 <img src="docs/wide_outlines.png">
 
@@ -28,3 +31,4 @@ A Godot project for playing around with compositor effects.
 | [Include Scene Data Virtually](https://github.com/godotengine/godot/blob/98782b6c8c9cabe0fb7c80bc62640735ecb076d3/servers/rendering/renderer_rd/renderer_scene_render_rd.cpp#L1679C6-L1679C7) |
 | [Compute Shader Textures](https://nekotoarts.github.io/blog/Compute-Shader-Textures) |
 | [Stencil Buffer Texture](https://github.com/dmlary/godot-demo-sencil-buffer-compositor-effect) |
+| [CodePage12](https://github.com/otaviogood/shader_fontgen/blob/master/codepage12.png) |
