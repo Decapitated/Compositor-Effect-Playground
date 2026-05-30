@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://iexb6wjonv64"
+path="res://.godot/imported/pixel.comp.glsl-b610ea22ab85aac962c36494310d97a6.res"
+
+[deps]
+
+source_file="res://effects/pixel_effect/pixel/pixel.comp.glsl"
+dest_files=["res://.godot/imported/pixel.comp.glsl-b610ea22ab85aac962c36494310d97a6.res"]
+
+[params]
+
