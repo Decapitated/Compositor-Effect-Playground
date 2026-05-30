@@ -3,7 +3,7 @@ class_name PixelEffect extends CompositorEffect
 
 const SHADER_UID_PATH := "uid://iexb6wjonv64"
 
-@export_range(1.0, 10.0, 1.0, "or_greater") var scale: float = 1.0
+@export_range(1.0, 5.0, 1.0, "or_greater") var scale: float = 1.0
 
 var _rd: RenderingDevice = null
 
