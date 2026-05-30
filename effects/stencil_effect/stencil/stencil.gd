@@ -234,6 +234,13 @@ func _build_pipelines() -> void:
         stencil_state.front_op_fail = RenderingDevice.STENCIL_OP_KEEP
         stencil_state.front_op_pass = RenderingDevice.STENCIL_OP_KEEP
 
+        stencil_state.back_op_compare = stencil_state.front_op_compare
+        stencil_state.back_op_compare_mask = stencil_state.front_op_compare_mask
+        stencil_state.back_op_write_mask = stencil_state.front_op_write_mask
+        stencil_state.back_op_reference = stencil_state.front_op_reference
+        stencil_state.back_op_fail = stencil_state.front_op_fail
+        stencil_state.back_op_pass = stencil_state.front_op_pass
+
         var pipeline = _rd.render_pipeline_create(
             _shader,
             _framebuffer_format,
